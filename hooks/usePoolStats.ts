@@ -4,22 +4,21 @@ import { useReadContract } from "wagmi";
 import { CONTRACTS } from "@/config/contracts";
 import { prizePoolAbi } from "@/abi/PrizePool";
 
-export function useDrawState() {
-  const drawPending = useReadContract({
+export function usePoolStats() {
+  const totalPrincipal = useReadContract({
     address: CONTRACTS.prizePool,
     abi: prizePoolAbi,
-    functionName: "drawPending",
-    query: { refetchInterval: 3000 },
+    functionName: "totalPrincipal",
   });
 
-  const nextDrawTime = useReadContract({
+  const depositorCount = useReadContract({
     address: CONTRACTS.prizePool,
     abi: prizePoolAbi,
-    functionName: "nextDrawTime",
+    functionName: "getDepositorCount",
   });
 
   return {
-    drawPending: drawPending.data,
-    nextDrawTime: nextDrawTime.data,
+    totalPrincipal: totalPrincipal.data,
+    depositorCount: depositorCount.data,
   };
 }
