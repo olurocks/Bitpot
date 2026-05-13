@@ -7,11 +7,26 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface ISavingsVault {
-    function deposit(uint256 assets, address receiver) external returns (uint256 shares);
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares);
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets);
-    function convertToShares(uint256 assets) external view returns (uint256 shares);
-    function convertToAssets(uint256 shares) external view returns (uint256 assets);
+    function deposit(
+        uint256 assets,
+        address receiver
+    ) external returns (uint256 shares);
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    ) external returns (uint256 shares);
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) external returns (uint256 assets);
+    function convertToShares(
+        uint256 assets
+    ) external view returns (uint256 shares);
+    function convertToAssets(
+        uint256 shares
+    ) external view returns (uint256 assets);
     function balanceOf(address account) external view returns (uint256);
     function decimals() external view returns (uint8);
 }
@@ -164,7 +179,9 @@ contract PrizePool is ReentrancyGuard, Ownable {
 
         uint256 sharesBefore = IERC20(address(vault)).balanceOf(address(this));
         vault.deposit(received, address(this));
-        uint256 sharesReceived = IERC20(address(vault)).balanceOf(address(this)) - sharesBefore;
+        uint256 sharesReceived = IERC20(address(vault)).balanceOf(
+            address(this)
+        ) - sharesBefore;
         require(sharesReceived > 0, "no shares minted");
 
         IERC20(address(vault)).forceApprove(address(gauge), sharesReceived);
@@ -199,7 +216,8 @@ contract PrizePool is ReentrancyGuard, Ownable {
         if (fullWithdrawal) {
             sharesToUnstake = userShares[msg.sender];
         } else {
-            sharesToUnstake = (userShares[msg.sender] * wadAmount) / depositsWad[msg.sender];
+            sharesToUnstake =
+                (userShares[msg.sender] * wadAmount) / depositsWad[msg.sender];
         }
 
         require(sharesToUnstake > 0, "shares=0");
@@ -224,7 +242,13 @@ contract PrizePool is ReentrancyGuard, Ownable {
             _removeDepositor(msg.sender);
         }
 
-        emit Withdrawn(msg.sender, amount, musdReturned, wadAmount, sharesToUnstake);
+        emit Withdrawn(
+            msg.sender,
+            amount,
+            musdReturned,
+            wadAmount,
+            sharesToUnstake
+        );
     }
 
     // --- Two-Step Draw ---
@@ -247,7 +271,10 @@ contract PrizePool is ReentrancyGuard, Ownable {
     // Production: replace onlyOwner with the Pyth Entropy callback/authorized provider.
     function cancelDraw() external nonReentrant {
         require(drawPending, "no pending draw");
-        require(block.timestamp >= drawRequestedAt + drawTimeout, "timeout not reached");
+        require(
+            block.timestamp >= drawRequestedAt + drawTimeout,
+            "timeout not reached"
+        );
 
         uint256 cancelledDrawId = pendingDrawId;
         drawPending = false;
@@ -270,7 +297,13 @@ contract PrizePool is ReentrancyGuard, Ownable {
         uint256 mezoBefore = mezo.balanceOf(address(this));
         gauge.getReward(address(this));
         uint256 prizeNative = mezo.balanceOf(address(this)) - mezoBefore;
-        require(prizeNative > 0, "no prize");
+        if (prizeNative == 0) {
+            drawPending = false;
+            emit DrawCancelled(pendingDrawId);
+            pendingDrawId = 0;
+            drawRequestedAt = 0;
+            return;
+        }
 
         uint256 prizeWad = prizeNative * mezoScalar;
 
@@ -284,13 +317,15 @@ contract PrizePool is ReentrancyGuard, Ownable {
 
         mezo.safeTransfer(winner, prizeNative);
 
-        drawHistory.push(DrawResult({
-            drawId: fulfilledDrawId,
-            winner: winner,
-            prizeWad: prizeWad,
-            prizeNative: prizeNative,
-            timestamp: block.timestamp
-        }));
+        drawHistory.push(
+            DrawResult({
+                drawId: fulfilledDrawId,
+                winner: winner,
+                prizeWad: prizeWad,
+                prizeNative: prizeNative,
+                timestamp: block.timestamp
+            })
+        );
 
         emit DrawTriggered(fulfilledDrawId, winner, prizeWad, prizeNative);
 
@@ -312,7 +347,9 @@ contract PrizePool is ReentrancyGuard, Ownable {
         return lastDrawTime + drawInterval;
     }
 
-    function getOdds(address user) public view returns (uint256 numerator, uint256 denominator) {
+    function getOdds(
+        address user
+    ) public view returns (uint256 numerator, uint256 denominator) {
         return (_previewUserWeight(user), _previewTotalWeight());
     }
 
@@ -332,7 +369,10 @@ contract PrizePool is ReentrancyGuard, Ownable {
         return drawHistory.length;
     }
 
-    function getDrawHistoryPage(uint256 from, uint256 count) public view returns (DrawResult[] memory) {
+    function getDrawHistoryPage(
+        uint256 from,
+        uint256 count
+    ) public view returns (DrawResult[] memory) {
         if (from >= drawHistory.length) {
             return new DrawResult[](0);
         }
@@ -362,24 +402,35 @@ contract PrizePool is ReentrancyGuard, Ownable {
         drawTimeout = _timeout;
     }
 
-    function emergencyRecoverToken(address token, uint256 amount) external onlyOwner {
+    function emergencyRecoverToken(
+        address token,
+        uint256 amount
+    ) external onlyOwner {
         require(token != address(musd), "no musd recovery");
         require(token != address(vault), "no vault-share recovery");
+        require(token != address(mezo), "no mezo recovery");
         IERC20(token).safeTransfer(owner(), amount);
     }
 
     // --- Internal ---
 
-    function _pickWinner(bytes32 randomSeed, uint256 drawId) internal view returns (address) {
+    function _pickWinner(
+        bytes32 randomSeed,
+        uint256 drawId
+    ) internal view returns (address) {
         require(totalWeight > 0, "no weight");
 
-        uint256 seed = uint256(keccak256(abi.encodePacked(
-            randomSeed,
-            totalWeight,
-            depositors.length,
-            drawId,
-            address(this)
-        )));
+        uint256 seed = uint256(
+            keccak256(
+                abi.encodePacked(
+                    randomSeed,
+                    totalWeight,
+                    depositors.length,
+                    drawId,
+                    address(this)
+                )
+            )
+        );
 
         uint256 target = seed % totalWeight;
         uint256 cumulative = 0;
@@ -434,14 +485,17 @@ contract PrizePool is ReentrancyGuard, Ownable {
 
     function _previewUserWeight(address user) internal view returns (uint256) {
         if (!isDepositor[user]) return 0;
-        return weightedDeposits[user] + (depositsWad[user] * (block.timestamp - lastWeightUpdate[user]));
+        return
+            weightedDeposits[user] +
+            (depositsWad[user] * (block.timestamp - lastWeightUpdate[user]));
     }
 
     function _previewTotalWeight() internal view returns (uint256) {
         uint256 preview = totalWeight;
         for (uint256 i = 0; i < depositors.length; i++) {
             address user = depositors[i];
-            preview += depositsWad[user] * (block.timestamp - lastWeightUpdate[user]);
+            preview +=
+                depositsWad[user] * (block.timestamp - lastWeightUpdate[user]);
         }
         return preview;
     }
