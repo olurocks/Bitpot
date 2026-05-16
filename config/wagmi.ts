@@ -5,8 +5,7 @@ import { injected, metaMask, walletConnect } from "wagmi/connectors";
 import { mezoTestnet } from "./chains";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
-
-export const wagmiConfig = createConfig({
+export const mezoconfig = createConfig({
   chains: [mezoTestnet],
   connectors: [
     injected(),

@@ -21,3 +21,4 @@ export const mezoTestnet = defineChain({
   },
   testnet: true,
 });
+

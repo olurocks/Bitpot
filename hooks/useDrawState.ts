@@ -1,19 +1,19 @@
 "use client";
 
 import { useReadContract } from "wagmi";
-import { CONTRACTS } from "@/config/contracts";
+import { Addresses } from "@/config/contracts";
 import { prizePoolAbi } from "@/abi/PrizePool";
 
 export function useDrawState() {
   const drawPending = useReadContract({
-    address: CONTRACTS.prizePool,
+    address: Addresses.prizePool,
     abi: prizePoolAbi,
     functionName: "drawPending",
     query: { refetchInterval: 3000 },
   });
 
   const nextDrawTime = useReadContract({
-    address: CONTRACTS.prizePool,
+    address: Addresses.prizePool,
     abi: prizePoolAbi,
     functionName: "nextDrawTime",
   });

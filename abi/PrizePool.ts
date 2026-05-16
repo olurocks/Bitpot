@@ -41,4 +41,11 @@ export const prizePoolAbi = [
     inputs: [],
     outputs: [{ type: "uint256" }],
   },
+  {
+    name: "mezo",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "address" }],
+  },
 ];

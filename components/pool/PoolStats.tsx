@@ -3,6 +3,14 @@
 import { usePendingPrize } from "@/hooks/usePendingPrize";
 import { usePoolStats } from "@/hooks/usePoolStats";
 import { formatToken } from "@/lib/format";
+import { useTheme } from "../ThemeProvider";
+import { themeColors } from "@/constants";
+
+type StatProps = {
+  label: string;
+  colors: any;
+  value: string;
+};
 
 export function PoolStats() {
   const { data: prize } = usePendingPrize() as { data: bigint | undefined };
@@ -10,25 +18,83 @@ export function PoolStats() {
     totalPrincipal: bigint | undefined;
     depositorCount: bigint | undefined;
   };
+  const theme = useTheme();
+  const colors = themeColors[theme.theme];
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <Stat label="Prize (MEZO)" value={formatToken(prize)} />
-      <Stat label="Total Deposits (MUSD)" value={formatToken(totalPrincipal)} />
-      <Stat label="Participants" value={depositorCount?.toString() || "0"} />
+    <div className="grid gap-4 md:grid-rows-3">
+      <Stat label="Prize (MEZO)" value={formatToken(prize)} colors={colors} />
+      <Stat
+        label="Total Deposits (MUSD)"
+        value={formatToken(totalPrincipal)}
+        colors={colors}
+      />
+      <Stat
+        label="Participants"
+        value={depositorCount?.toString() || "0"}
+        colors={colors}
+      />
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+export function Stat({ label, value, colors }: StatProps) {
   return (
-    <div className="rounded-xl border border-emerald-100 bg-white p-4">
-      <p className="text-sm text-slate-500" style={{ color: "#212a36" }}>
+    <div
+      style={{
+        backgroundColor: colors.surface,
+        border: `1px solid ${colors.cardBorder}`,
+        borderRadius: "24px",
+
+        padding: "24px",
+
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+
+        boxShadow:
+          colors.background === "#07101F"
+            ? "0 4px 20px rgba(0,0,0,0.25)"
+            : "0 4px 20px rgba(2, 27, 82, 0.06)",
+
+        transition: "all 0.2s ease",
+      }}
+    >
+      {/* LABEL */}
+      <span
+        style={{
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          color: colors.textSecondary,
+          letterSpacing: "0.02em",
+        }}
+      >
         {label}
-      </p>
-      <p className="text-xl font-bold" style={{ color: "#212a36" }}>
+      </span>
+
+      {/* VALUE */}
+      <span
+        style={{
+          fontSize: "2rem",
+          fontWeight: 800,
+          color: colors.textPrimary,
+          letterSpacing: "-0.04em",
+          lineHeight: 1.1,
+        }}
+      >
         {value}
-      </p>
+      </span>
+
+      {/* ACCENT BAR */}
+      <div
+        style={{
+          width: "64px",
+          height: "6px",
+          borderRadius: "999px",
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+          marginTop: "4px",
+        }}
+      />
     </div>
   );
 }

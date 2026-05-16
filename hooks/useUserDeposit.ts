@@ -1,14 +1,14 @@
 "use client";
 
 import { useAccount, useReadContract } from "wagmi";
-import { CONTRACTS } from "@/config/contracts";
+import { Addresses } from "@/config/contracts";
 import { prizePoolAbi } from "@/abi/PrizePool";
 
 export function useUserDeposit() {
   const { address } = useAccount();
 
   return useReadContract({
-    address: CONTRACTS.prizePool,
+    address: Addresses.prizePool,
     abi: prizePoolAbi,
     functionName: "deposits",
     args: address ? [address] : undefined,
