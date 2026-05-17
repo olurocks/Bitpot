@@ -48,4 +48,11 @@ export const prizePoolAbi = [
     inputs: [],
     outputs: [{ type: "address" }],
   },
+  {
+    name: "deposit",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [],
+  },
 ];
