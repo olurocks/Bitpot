@@ -76,4 +76,10 @@ export const prizePoolAbi = [
     inputs: [],
     outputs: [],
   },
+  {
+    name: "fulfillDraw",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ];
