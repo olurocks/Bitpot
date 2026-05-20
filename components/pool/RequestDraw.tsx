@@ -12,42 +12,58 @@ export function RequestDrawButton({ colors }: { colors: any }) {
 
   if (!drawReady && !drawPending) return null;
 
-  if (drawPending) {
-    return (
-      <span
-        style={{
-          backgroundColor: `${colors.accent}22`,
-          color: colors.accent,
-          borderRadius: "24px",
-          padding: "12px 20px",
-          fontWeight: 600,
-          fontSize: "1rem",
-        }}
-      >
-        ⏳ Awaiting Fulfillment
-      </span>
-    );
-  }
+  // if (drawPending) {
+  //   return (
+  //     <span
+  //       style={{
+  //         backgroundColor: `${colors.accent}22`,
+  //         color: colors.accent,
+  //         borderRadius: "24px",
+  //         padding: "12px 20px",
+  //         fontWeight: 600,
+  //         fontSize: "1rem",
+  //       }}
+  //     >
+  //       ⏳ Awaiting Fulfillment
+  //     </span>
+  //   );
+  // }
 
   return (
-    <button
-      disabled={!canRequest || isPending}
-      title={disabledReason ?? undefined}
-      onClick={requestDraw}
+    <div
       style={{
-        backgroundColor: canRequest && !isPending ? colors.accent : "#888",
-        color: colors.background,
-        border: "none",
-        padding: "12px 24px",
-        fontSize: "1rem",
-        fontWeight: 600,
-        borderRadius: "24px",
-        cursor: canRequest && !isPending ? "pointer" : "not-allowed",
-        opacity: canRequest && !isPending ? 1 : 0.6,
-        transition: "opacity 0.2s",
+        gridColumn: "1 / -1",
+        display: "flex",
+        justifyContent: "center",
       }}
     >
-      {isPending ? "Requesting..." : "🎲 Request Draw"}
-    </button>
+      {drawReady && !drawPending && (
+        <span
+          style={{
+            padding: "10px 18px",
+            borderRadius: "24px",
+            backgroundColor: `${colors.primary}22`,
+            color: colors.primary,
+            fontWeight: 700,
+          }}
+        >
+          🎲 Draw starting...
+        </span>
+      )}
+
+      {drawPending && (
+        <span
+          style={{
+            padding: "10px 18px",
+            borderRadius: "24px",
+            backgroundColor: `${colors.accent}22`,
+            color: colors.accent,
+            fontWeight: 700,
+          }}
+        >
+          ⏳ Selecting winner...
+        </span>
+      )}
+    </div>
   );
 }

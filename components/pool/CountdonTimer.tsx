@@ -52,17 +52,19 @@ export function CountdownTimer() {
     query: { refetchInterval: 5000 },
   });
 
-  const toBigInt = (v: any): bigint | null => {
-    if (v === null || v === undefined) return null;
-    if (typeof v === "bigint") return v;
-    if (typeof v === "number") return BigInt(Math.floor(v));
-    try {
-      // ethers BigNumber or numeric string
-      return BigInt(String((v as any).toString ? (v as any).toString() : v));
-    } catch (_) {
-      return null;
-    }
-  };
+  // const toBigInt = (v: any): bigint | null => {
+  //   if (v === null || v === undefined) return null;
+  //   if (typeof v === "bigint") return v;
+  //   if (typeof v === "number") return BigInt(Math.floor(v));
+  //   try {
+  //     // ethers BigNumber or numeric string
+  //     return BigInt(String((v as any).toString ? (v as any).toString() : v));
+  //   } catch (_) {
+  //     return null;
+  //   }
+  // };
+
+  const poolLocked = !!drawPending;
 
   //request draw when drawPending
 
@@ -217,12 +219,14 @@ export function CountdownTimer() {
         }}
       >
         <button
+          disabled={poolLocked}
           style={btnStyle(colors.secondary, colors.background)}
           onClick={() => setShowDeposit(true)}
         >
           Join Pool
         </button>
         <button
+          disabled={poolLocked}
           style={btnStyle(colors.primary, colors.textPrimary)}
           onClick={() => setShowWithdraw(true)}
         >
