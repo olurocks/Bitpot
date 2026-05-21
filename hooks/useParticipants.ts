@@ -47,7 +47,6 @@ export function useParticipants() {
     [addressResults],
   );
 
-  // 3. Batch fetch deposits + odds for each address
   const detailContracts = useMemo(
     () =>
       addresses.flatMap((addr) => [
@@ -72,7 +71,6 @@ export function useParticipants() {
     query: { enabled: addresses.length > 0, refetchInterval: 10000 },
   });
 
-  // 4. Zip everything together
   const participants = useMemo<Participant[]>(() => {
     if (!detailResults || addresses.length === 0) return [];
 
