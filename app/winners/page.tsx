@@ -1,0 +1,338 @@
+"use client";
+
+import { useDrawHistory } from "@/hooks/useDrawHistory";
+import { useTheme } from "@/components/ThemeProvider";
+import { themeColors } from "@/constants";
+import { formatToken } from "@/lib/format";
+import { formatUnits } from "viem";
+
+function shorten(address: string) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function formatDate(timestamp: bigint) {
+  return new Date(Number(timestamp) * 1000).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+function EmptyState({ colors }: { colors: any }) {
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        padding: "80px 24px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "16px",
+      }}
+    >
+      <span style={{ fontSize: "3.5rem" }}>🎲</span>
+      <h2
+        style={{
+          color: colors.textPrimary,
+          fontWeight: 800,
+          fontSize: "1.5rem",
+          margin: 0,
+        }}
+      >
+        No draws yet
+      </h2>
+      <p
+        style={{ color: colors.textSecondary, margin: 0, fontSize: "0.95rem" }}
+      >
+        The first winner will appear here once the initial draw is complete.
+      </p>
+    </div>
+  );
+}
+
+// ─── Winners page ─────────────────────────────────────────────────────────────
+export default function WinnersPage() {
+  const { theme } = useTheme();
+  const colors = themeColors[theme];
+  const { draws, isLoading } = useDrawHistory();
+
+  // most recent first
+  const sorted = [...draws].reverse();
+
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        backgroundColor: colors.background,
+        padding: "48px 24px",
+      }}
+    >
+      <div style={{ maxWidth: "960px", margin: "0 auto" }}>
+        {/* header */}
+        <div style={{ marginBottom: "40px" }}>
+          <span
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              color: colors.primary,
+              textTransform: "uppercase",
+            }}
+          >
+            Hall of fame
+          </span>
+          <h1
+            style={{
+              fontSize: "2.4rem",
+              fontWeight: 900,
+              letterSpacing: "-0.04em",
+              color: colors.textPrimary,
+              margin: "8px 0 10px",
+            }}
+          >
+            Winners
+          </h1>
+          <p
+            style={{
+              color: colors.textSecondary,
+              fontSize: "0.95rem",
+              margin: 0,
+            }}
+          >
+            Every draw, every winner — fully on-chain and verifiable.
+          </p>
+        </div>
+
+        {/* summary strip */}
+        {draws.length > 0 && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "16px",
+              marginBottom: "32px",
+            }}
+          >
+            {[
+              { label: "Total Draws", value: draws.length.toString() },
+              {
+                label: "Total Prizes",
+                value:
+                  formatToken(
+                    draws.reduce((a, d) => a + d.prizeNative, BigInt(0)),
+                  ) + " MEZO",
+              },
+              {
+                label: "Unique Winners",
+                value: new Set(
+                  draws.map((d) => d.winner.toLowerCase()),
+                ).size.toString(),
+              },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  backgroundColor: colors.surface,
+                  border: `1px solid ${colors.cardBorder}`,
+                  borderRadius: "16px",
+                  padding: "18px 22px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    color: colors.textSecondary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {s.label}
+                </span>
+                <span
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 800,
+                    color: colors.textPrimary,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  {s.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* table */}
+        <div
+          style={{
+            backgroundColor: colors.surface,
+            border: `1px solid ${colors.cardBorder}`,
+            borderRadius: "24px",
+            overflow: "hidden",
+          }}
+        >
+          {/* table header */}
+          {draws.length > 0 && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "80px 1fr 160px 100px 180px",
+                padding: "14px 24px",
+                borderBottom: `1px solid ${colors.cardBorder}`,
+                backgroundColor: colors.elevatedSurface,
+              }}
+            >
+              {["Draw #", "Winner", "Prize (MEZO)", "Odds", "Date"].map((h) => (
+                <span
+                  key={h}
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: colors.textTertiary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {h}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {isLoading ? (
+            <div
+              style={{
+                padding: "48px",
+                textAlign: "center",
+                color: colors.textSecondary,
+              }}
+            >
+              Loading draw history...
+            </div>
+          ) : draws.length === 0 ? (
+            <EmptyState colors={colors} />
+          ) : (
+            sorted.map((draw, i) => (
+              <div
+                key={draw.drawId.toString()}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "80px 1fr 160px 100px 180px",
+                  padding: "18px 24px",
+                  borderBottom:
+                    i < sorted.length - 1
+                      ? `1px solid ${colors.cardBorder}`
+                      : "none",
+                  alignItems: "center",
+                  transition: "background-color 0.15s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
+              >
+                {/* draw id */}
+                <span
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
+                    color: colors.textTertiary,
+                  }}
+                >
+                  #{draw.drawId.toString()}
+                </span>
+
+                {/* winner */}
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                >
+                  {/* avatar circle */}
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.65rem",
+                      fontWeight: 800,
+                      color: colors.white,
+                      flexShrink: 0,
+                    }}
+                  >
+                    🏆
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                      color: colors.textPrimary,
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    {shorten(draw.winner)}
+                  </span>
+                </div>
+
+                {/* prize */}
+                <div>
+                  <span
+                    style={{
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      color: colors.reward,
+                    }}
+                  >
+                    {formatToken(draw.prizeNative)} MEZO
+                  </span>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: colors.textTertiary,
+                      marginTop: "2px",
+                    }}
+                  >
+                    USD price TBD
+                  </div>
+                </div>
+
+                {/* odds placeholder — prizeWad / totalWeight not stored per draw, show — */}
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    color: colors.textSecondary,
+                    fontStyle: "italic",
+                  }}
+                >
+                  —
+                </span>
+
+                {/* date */}
+                <span
+                  style={{
+                    fontSize: "0.82rem",
+                    color: colors.textSecondary,
+                  }}
+                >
+                  {formatDate(draw.timestamp)}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
