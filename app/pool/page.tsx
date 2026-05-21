@@ -4,6 +4,7 @@ import { PoolStats } from "@/components/pool/PoolStats";
 import { CountdownTimer } from "@/components/pool/CountdonTimer";
 import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
+import { ParticipantsTable } from "@/components/pool/ParticipantsTable";
 
 export default function PoolPage() {
   const { theme } = useTheme();
@@ -53,6 +54,7 @@ export default function PoolPage() {
           <CountdownTimer />
         </section>
       </div>
+      <ParticipantsTable />
     </main>
   );
 }

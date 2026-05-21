@@ -2,6 +2,7 @@
 
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -13,6 +14,7 @@ export function ConnectWallet() {
   const { disconnect } = useDisconnect();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const connector = connectors[0];
 
@@ -59,25 +61,12 @@ export function ConnectWallet() {
               <button
                 onClick={() => {
                   setMenuOpen(false);
-                  // Navigate to profile or open modal
-                  console.log("View Profile");
+                  router.push("/profile");
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 style={{ cursor: "pointer" }}
               >
                 View Profile
-              </button>
-
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  // Navigate to history or open modal
-                  console.log("View History / Status");
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                style={{ cursor: "pointer" }}
-              >
-                History & Status
               </button>
             </div>
 

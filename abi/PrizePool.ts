@@ -154,4 +154,21 @@ export const prizePoolAbi = [
     inputs: [],
     outputs: [{ type: "uint256" }],
   },
+  {
+    name: "isDepositor",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      {
+        name: "",
+        type: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+      },
+    ],
+  },
 ];

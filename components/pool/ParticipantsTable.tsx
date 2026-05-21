@@ -5,6 +5,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { formatUnits } from "viem";
 import { useState } from "react";
+import { PlayerModal } from "../PlayerModal";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -18,6 +19,9 @@ export function ParticipantsTable() {
   const { participants, count, isLoading } = useParticipants();
   const [sortBy, setSortBy] = useState<SortKey>("odds");
   const [copied, setCopied] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<`0x${string}` | null>(
+    null,
+  );
 
   const handleCopy = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -34,8 +38,7 @@ export function ParticipantsTable() {
     <button
       onClick={() => setSortBy(k)}
       style={{
-        backgroundColor:
-          sortBy === k ? `${colors.primary}22` : "transparent",
+        backgroundColor: sortBy === k ? `${colors.primary}22` : "transparent",
         color: sortBy === k ? colors.primary : colors.textSecondary,
         border: `1px solid ${sortBy === k ? colors.primary + "55" : colors.cardBorder}`,
         borderRadius: "999px",
@@ -74,7 +77,13 @@ export function ParticipantsTable() {
           >
             Participants
           </h2>
-          <p style={{ color: colors.textSecondary, fontSize: "0.85rem", margin: 0 }}>
+          <p
+            style={{
+              color: colors.textSecondary,
+              fontSize: "0.85rem",
+              margin: 0,
+            }}
+          >
             {count} active depositor{count !== 1 ? "s" : ""} in the current pool
           </p>
         </div>
@@ -156,7 +165,7 @@ export function ParticipantsTable() {
         ) : (
           sorted.map((p, i) => {
             const depositDisplay = Number(
-              formatUnits(p.depositWad, 18)
+              formatUnits(p.depositWad, 18),
             ).toLocaleString(undefined, { maximumFractionDigits: 4 });
 
             const barWidth = Math.min(p.oddsPercent * 2, 100);
@@ -174,6 +183,7 @@ export function ParticipantsTable() {
                       : "none",
                   alignItems: "center",
                   transition: "background-color 0.15s",
+                  cursor: "pointer",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
@@ -181,6 +191,7 @@ export function ParticipantsTable() {
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.backgroundColor = "transparent")
                 }
+                onClick={() => setSelectedAddress(p.address)}
               >
                 {/* rank */}
                 <span
@@ -190,11 +201,19 @@ export function ParticipantsTable() {
                     color: i === 0 ? colors.reward : colors.textTertiary,
                   }}
                 >
-                  {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+                  {i === 0
+                    ? "🥇"
+                    : i === 1
+                      ? "🥈"
+                      : i === 2
+                        ? "🥉"
+                        : `#${i + 1}`}
                 </span>
 
                 {/* address */}
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                >
                   <div
                     style={{
                       width: "28px",
@@ -281,6 +300,10 @@ export function ParticipantsTable() {
           })
         )}
       </div>
+      <PlayerModal
+        address={selectedAddress}
+        onClose={() => setSelectedAddress(null)}
+      />
     </section>
   );
 }

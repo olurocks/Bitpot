@@ -77,6 +77,17 @@ export function Header() {
           }}
         >
           <Link
+            href="/"
+            style={{
+              color: colors.textSecondary,
+              fontWeight: 700,
+              fontSize: "1rem",
+              textDecoration: "none",
+            }}
+          >
+            Home
+          </Link>
+          <Link
             href="/pool"
             style={{
               color: colors.textSecondary,
@@ -99,9 +110,8 @@ export function Header() {
           >
             Winners
           </Link>
-
           <Link
-            href="/demo"
+            href="/profile"
             style={{
               color: colors.textSecondary,
               fontWeight: 700,
@@ -109,7 +119,18 @@ export function Header() {
               textDecoration: "none",
             }}
           >
-            Demo
+            My Stats
+          </Link>
+          <Link
+            href="/leaderboard"
+            style={{
+              color: colors.textSecondary,
+              fontWeight: 700,
+              fontSize: "1rem",
+              textDecoration: "none",
+            }}
+          >
+            Leaderboard
           </Link>
         </nav>
 

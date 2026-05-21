@@ -4,7 +4,9 @@ import { useDrawHistory } from "@/hooks/useDrawHistory";
 import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { formatToken } from "@/lib/format";
+import { useState } from "react";
 import { formatUnits } from "viem";
+import { PlayerModal } from "@/components/PlayerModal";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -58,6 +60,9 @@ export default function WinnersPage() {
   const { theme } = useTheme();
   const colors = themeColors[theme];
   const { draws, isLoading } = useDrawHistory();
+  const [selectedAddress, setSelectedAddress] = useState<`0x${string}` | null>(
+    null,
+  );
 
   // most recent first
   const sorted = [...draws].reverse();
@@ -233,6 +238,7 @@ export default function WinnersPage() {
                       : "none",
                   alignItems: "center",
                   transition: "background-color 0.15s",
+                  cursor: "pointer",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
@@ -240,6 +246,9 @@ export default function WinnersPage() {
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.backgroundColor = "transparent")
                 }
+                onClick={() => {
+                  setSelectedAddress(draw.winner);
+                }}
               >
                 {/* draw id */}
                 <span
@@ -333,6 +342,10 @@ export default function WinnersPage() {
           )}
         </div>
       </div>
+      <PlayerModal
+        address={selectedAddress}
+        onClose={() => setSelectedAddress(null)}
+      />
     </main>
   );
 }
