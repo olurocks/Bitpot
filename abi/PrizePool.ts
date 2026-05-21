@@ -83,4 +83,75 @@ export const prizePoolAbi = [
     stateMutability: "nonpayable",
     type: "function",
   },
+
+  {
+    name: "getDrawHistory",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      {
+        type: "tuple[]",
+        components: [
+          { name: "drawId", type: "uint256" },
+          { name: "winner", type: "address" },
+          { name: "prizeWad", type: "uint256" },
+          { name: "prizeNative", type: "uint256" },
+          { name: "timestamp", type: "uint256" },
+        ],
+      },
+    ],
+  },
+  {
+    name: "getOdds",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [
+      { name: "numerator", type: "uint256" },
+      { name: "denominator", type: "uint256" },
+    ],
+  },
+  {
+    name: "getUserWeight",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "getTotalWeight",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "allTimeDepositWad",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "depositors",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "index", type: "uint256" }],
+    outputs: [{ type: "address" }],
+  },
+  {
+    name: "drawCount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "totalPrincipalWad",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
 ];
