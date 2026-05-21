@@ -35,7 +35,7 @@ export const prizePoolAbi = [
     outputs: [{ type: "uint256" }],
   },
   {
-    name: "totalPrincipal",
+    name: "totalPrincipalWad",
     type: "function",
     stateMutability: "view",
     inputs: [],
@@ -79,6 +79,7 @@ export const prizePoolAbi = [
   {
     name: "fulfillDraw",
     outputs: [],
+    inputs: [{ name: "randomSeed", type: "bytes32" }],
     stateMutability: "nonpayable",
     type: "function",
   },

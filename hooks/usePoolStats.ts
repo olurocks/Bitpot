@@ -8,7 +8,7 @@ export function usePoolStats() {
   const totalPrincipal = useReadContract({
     address: Addresses.prizePool,
     abi: prizePoolAbi,
-    functionName: "totalPrincipal",
+    functionName: "totalPrincipalWad",
   });
 
   const depositorCount = useReadContract({

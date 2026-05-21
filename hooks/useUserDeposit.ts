@@ -10,7 +10,7 @@ export function useUserDeposit() {
   return useReadContract({
     address: Addresses.prizePool,
     abi: prizePoolAbi,
-    functionName: "deposits",
+    functionName: "depositsWad",
     args: address ? [address] : undefined,
     query: {
       enabled: !!address,
