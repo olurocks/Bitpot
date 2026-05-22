@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Header } from "@/components/layout/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PageTransition } from "@/components/PageTransition";
 
 export const metadata: Metadata = {
   title: "BitPot",
@@ -20,7 +21,9 @@ export default function RootLayout({
         <body className="min-h-screen bg-[#f8fffb] text-slate-950">
           <Providers>
             <Header />
-            <main>{children}</main>
+            <PageTransition>
+              <main>{children}</main>
+            </PageTransition>
           </Providers>
         </body>
       </ThemeProvider>

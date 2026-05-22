@@ -5,9 +5,8 @@ import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { useAllTimeStats } from "@/hooks/useAllTimeStats";
 import { formatToken } from "@/lib/format";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 
-// ─── Animated counter ────────────────────────────────────────────────────────
 function AnimatedNumber({
   value,
   duration = 1200,
@@ -36,26 +35,26 @@ function AnimatedNumber({
   return <>{display.toLocaleString()}</>;
 }
 
-// ─── How It Works graphic ─────────────────────────────────────────────────────
 function HowItWorks({ colors }: { colors: any }) {
+  const { theme } = useTheme();
   const steps = [
     {
-      icon: "💰",
+      icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/37163.png",
       title: "Deposit MUSD",
       desc: "Add your Bitcoin-backed MUSD to the prize pool. No lock-ups, withdraw anytime.",
     },
     {
-      icon: "📈",
+      icon: { light: "/chart.png", dark: "/chart-white.svg" },
       title: "Yield Accrues",
       desc: "Your MUSD earns yield in Mezo's institutional-grade vault — managed by August.",
     },
     {
-      icon: "🎲",
+      icon: { light: "/casino-black.png", dark: "/casino-white.png" },
       title: "Draw Happens",
       desc: "At each interval, a provably fair draw selects a winner weighted by deposit size and time held.",
     },
     {
-      icon: "🏆",
+      icon: { light: "/winner-white.svg", dark: "/winner-white.svg" },
       title: "Winner Gets Prize",
       desc: "The winner receives all accrued MEZO rewards. Everyone else keeps their full principal.",
     },
@@ -63,7 +62,6 @@ function HowItWorks({ colors }: { colors: any }) {
 
   return (
     <div style={{ position: "relative" }}>
-      {/* connecting line */}
       <div
         style={{
           position: "absolute",
@@ -101,7 +99,6 @@ function HowItWorks({ colors }: { colors: any }) {
                 width: "72px",
                 height: "72px",
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${colors.primary}22, ${colors.accent}22)`,
                 border: `2px solid ${colors.accent}55`,
                 display: "flex",
                 alignItems: "center",
@@ -110,9 +107,18 @@ function HowItWorks({ colors }: { colors: any }) {
                 position: "relative",
                 zIndex: 1,
                 backdropFilter: "blur(8px)",
+                padding: "8px",
               }}
             >
-              {s.icon}
+              <img
+                src={
+                  typeof s.icon === "string"
+                    ? s.icon
+                    : s.icon[theme === "light" ? "light" : "dark"]
+                }
+                alt={s.title}
+                style={{ overflow: "hidden" }}
+              />
               <span
                 style={{
                   position: "absolute",
@@ -162,36 +168,36 @@ function HowItWorks({ colors }: { colors: any }) {
   );
 }
 
-// ─── Why Mezo ─────────────────────────────────────────────────────────────────
 function WhyMezo({ colors }: { colors: any }) {
+  const { theme } = useTheme();
   const points = [
     {
-      icon: "₿",
+      icon: { light: "/bitcoin-black.svg", dark: "/bitcoin-white.svg" },
       title: "Bitcoin-Backed Yield",
       desc: "MUSD is collateralized by Bitcoin and redeemable back to BTC. Your savings stay Bitcoin-aligned — no synthetic substitutes.",
     },
     {
-      icon: "🏦",
+      icon: "/enterprise.svg",
       title: "Institutional-Grade Vault",
       desc: "The MUSD vault is managed by August, a DeFi prime brokerage processing $7B+ in monthly volume. Sophisticated strategies, one click.",
     },
     {
-      icon: "⚡",
+      icon: "/chart.png",
       title: "Real Yield, Not Emissions",
       desc: "MEZO rewards come from real network activity — bridging fees, swap fees, MUSD interest — not inflationary token printing.",
     },
     {
-      icon: "🔒",
+      icon: "/piggy.svg",
       title: "Never Sell Your Bitcoin",
       desc: "Earn, save, and win without ever selling, wrapping, or giving up custody of your BTC. Mezo keeps Bitcoin at the center.",
     },
     {
-      icon: "🌐",
+      icon: "/economy.svg",
       title: "Circular Bitcoin Economy",
       desc: "Mezo is building BTC-backed loans, stablecoins, and yield in one ecosystem — the infrastructure layer Bitcoin always needed.",
     },
     {
-      icon: "🛡️",
+      icon: "/piggy.svg",
       title: "No-Loss by Design",
       desc: "BitPot never touches your principal. Only the yield earned by the vault becomes the prize pool. You can't lose what you put in.",
     },
@@ -215,11 +221,33 @@ function WhyMezo({ colors }: { colors: any }) {
             padding: "24px",
             display: "flex",
             flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
             gap: "10px",
             transition: "border-color 0.2s",
           }}
         >
-          <span style={{ fontSize: "1.6rem" }}>{p.icon}</span>
+          <div
+            style={{
+              width: "72px",
+              height: "72px",
+              borderRadius: "18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: `${colors.primary}10`,
+            }}
+          >
+            <img
+              src={
+                typeof p.icon === "string"
+                  ? p.icon
+                  : p.icon[theme === "light" ? "light" : "dark"]
+              }
+              alt={p.title}
+              style={{ overflow: "hidden" }}
+            />{" "}
+          </div>
           <p
             style={{
               color: colors.textPrimary,
@@ -246,7 +274,6 @@ function WhyMezo({ colors }: { colors: any }) {
   );
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
 function StatCard({
   label,
   value,
@@ -263,27 +290,18 @@ function StatCard({
   return (
     <div
       style={{
-        backgroundColor: colors.surface,
         border: `1px solid ${colors.cardBorder}`,
-        borderRadius: "24px",
-        padding: "28px 24px",
+        boxShadow: accent ? `0 0 8px ${accent}40` : "none",
+        borderRadius: "18px",
+        padding: "20px 24px",
         display: "flex",
         flexDirection: "column",
         gap: "8px",
+        alignItems: "center",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "3px",
-          background: `linear-gradient(90deg, ${accent ?? colors.primary}, ${colors.accent})`,
-        }}
-      />
       <span
         style={{
           fontSize: "0.85rem",
@@ -291,6 +309,7 @@ function StatCard({
           color: colors.textSecondary,
           letterSpacing: "0.04em",
           textTransform: "uppercase",
+          marginBottom: "8px",
         }}
       >
         {label}
@@ -302,54 +321,15 @@ function StatCard({
           color: colors.textPrimary,
           letterSpacing: "-0.04em",
           lineHeight: 1,
+          marginBottom: "20px",
         }}
       >
         {value}
       </span>
-      {sub && (
-        <span style={{ fontSize: "0.8rem", color: colors.textTertiary }}>
-          {sub}
-        </span>
-      )}
     </div>
   );
 }
 
-// ─── Disclaimer ───────────────────────────────────────────────────────────────
-function Disclaimer({ colors }: { colors: any }) {
-  return (
-    <div
-      style={{
-        border: `1px solid ${colors.cardBorder}`,
-        borderRadius: "16px",
-        padding: "24px 28px",
-        backgroundColor: `${colors.surface}88`,
-      }}
-    >
-      <p
-        style={{
-          color: colors.textSecondary,
-          fontSize: "0.78rem",
-          lineHeight: 1.7,
-          margin: 0,
-        }}
-      >
-        <strong style={{ color: colors.textPrimary }}>Disclaimer: </strong>
-        BitPot is an experimental, no-loss prize savings protocol deployed on
-        the Mezo testnet. It is provided for demonstration and hackathon
-        purposes only and has not been audited. Do not deposit funds you cannot
-        afford to lose. Yield and prize amounts are not guaranteed and depend on
-        vault performance and network conditions. MEZO token rewards are subject
-        to change. This is not financial advice. Participation is subject to the
-        risks inherent in smart contract interactions, including but not limited
-        to bugs, exploits, and market volatility. Always do your own research
-        before interacting with any DeFi protocol.
-      </p>
-    </div>
-  );
-}
-
-// ─── Main landing page ────────────────────────────────────────────────────────
 export default function Home() {
   const { theme } = useTheme();
   const colors = themeColors[theme];
@@ -371,7 +351,6 @@ export default function Home() {
         overflowX: "hidden",
       }}
     >
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
         style={{
           position: "relative",
@@ -380,7 +359,6 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
-        {/* bg glow */}
         <div
           style={{
             position: "absolute",
@@ -389,7 +367,6 @@ export default function Home() {
             transform: "translateX(-50%)",
             width: "800px",
             height: "500px",
-            background: `radial-gradient(ellipse, ${colors.primary}18 0%, transparent 70%)`,
             pointerEvents: "none",
           }}
         />
@@ -400,7 +377,6 @@ export default function Home() {
             left: "10%",
             width: "300px",
             height: "300px",
-            background: `radial-gradient(ellipse, ${colors.accent}10 0%, transparent 70%)`,
             pointerEvents: "none",
           }}
         />
@@ -408,15 +384,14 @@ export default function Home() {
         <div
           style={{ position: "relative", maxWidth: "760px", margin: "0 auto" }}
         >
-          {/* badge */}
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
               backgroundColor: `${colors.accent}18`,
-              border: `1px solid ${colors.accent}44`,
-              borderRadius: "999px",
+              border: `1px solid ${colors.accent}60`,
+              borderRadius: "10px",
               padding: "6px 16px",
               marginBottom: "28px",
             }}
@@ -436,7 +411,8 @@ export default function Home() {
                 fontSize: "0.8rem",
                 fontWeight: 600,
                 color: colors.accent,
-                letterSpacing: "0.04em",
+                letterSpacing: "0.2em",
+                fontFamily: "monospace",
               }}
             >
               LIVE ON MEZO TESTNET
@@ -453,24 +429,22 @@ export default function Home() {
               color: colors.textPrimary,
             }}
           >
-            Save Bitcoin.{" "}
+            Save MUSD.{" "}
             <span
               style={{
-                background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                color: colors.primary,
               }}
             >
-              Win Bitcoin.
+              Win MEZO.
             </span>
             <br />
-            Never Lose a Sat.
           </h1>
 
           <p
             style={{
-              fontSize: "1.15rem",
+              fontSize: "1.3rem",
               color: colors.textSecondary,
+              fontWeight: "bold",
               lineHeight: 1.7,
               margin: "0 0 40px",
               maxWidth: "540px",
@@ -478,8 +452,7 @@ export default function Home() {
               marginRight: "auto",
             }}
           >
-            BitPot is a no-loss prize savings pool on Mezo. Your principal is
-            always safe — only the yield becomes the prize.
+            BitPot is a no-loss prize savings pool on Mezo.{" "}
           </p>
 
           <div
@@ -499,7 +472,7 @@ export default function Home() {
                 letterSpacing: "0.01em",
               }}
             >
-              Enter the Pool →
+              Enter the Pool
             </Link>
             <Link
               href="/winners"
@@ -567,7 +540,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
       <section
         style={{
           maxWidth: "1100px",
@@ -613,17 +585,6 @@ export default function Home() {
       >
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                color: colors.accent,
-                textTransform: "uppercase",
-              }}
-            >
-              Built on Bitcoin
-            </span>
             <h2
               style={{
                 fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
@@ -645,14 +606,13 @@ export default function Home() {
               }}
             >
               Mezo is the Bitcoin economic layer that makes BTC productive
-              capital — without ever asking you to sell.
+              capital.
             </p>
           </div>
           <WhyMezo colors={colors} />
         </div>
       </section>
 
-      {/* ── BOTTOM CTA ───────────────────────────────────────────────────── */}
       <section
         style={{
           textAlign: "center",
@@ -669,7 +629,6 @@ export default function Home() {
             transform: "translateX(-50%)",
             width: "700px",
             height: "400px",
-            background: `radial-gradient(ellipse, ${colors.secondary}14 0%, transparent 70%)`,
             pointerEvents: "none",
           }}
         />
@@ -687,9 +646,7 @@ export default function Home() {
             <br />
             <span
               style={{
-                background: `linear-gradient(135deg, ${colors.secondary}, ${colors.primary})`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                color:colors.secondary,
               }}
             >
               Your odds. Always improving.
@@ -720,17 +677,6 @@ export default function Home() {
             Join the Pool
           </Link>
         </div>
-      </section>
-
-      {/* ── DISCLAIMER ───────────────────────────────────────────────────── */}
-      <section
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          padding: "0 24px 60px",
-        }}
-      >
-        <Disclaimer colors={colors} />
       </section>
 
       <style>{`
