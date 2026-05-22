@@ -28,13 +28,20 @@ export default function PoolPage() {
           alignItems: "start",
         }}
       >
-        <section>
+        <section
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           <h1
             style={{
               fontSize: "2rem",
               fontWeight: 800,
               marginBottom: "24px",
               color: colors.textPrimary,
+              textAlign: "center",
             }}
           >
             Pool Statistics

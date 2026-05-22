@@ -6,6 +6,7 @@ import { themeColors } from "@/constants";
 import { formatUnits } from "viem";
 import { useState } from "react";
 import { PlayerModal } from "../PlayerModal";
+import { FileX } from "lucide-react";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -63,6 +64,7 @@ export function ParticipantsTable() {
           marginBottom: "20px",
           flexWrap: "wrap",
           gap: "12px",
+          paddingInline: "140px",
         }}
       >
         <div>
@@ -84,7 +86,7 @@ export function ParticipantsTable() {
               margin: 0,
             }}
           >
-            {count} active depositor{count !== 1 ? "s" : ""} in the current pool
+            active depositor{count !== 1 ? "s" : ""} : {count}
           </p>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
@@ -95,210 +97,224 @@ export function ParticipantsTable() {
 
       <div
         style={{
-          backgroundColor: colors.surface,
-          border: `1px solid ${colors.cardBorder}`,
-          borderRadius: "24px",
-          overflow: "hidden",
+          maxWidth: "90%",
+          margin: "0 auto",
+          paddingInline: "32px",
         }}
       >
-        {/* table header */}
-        {participants.length > 0 && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "40px 1fr 180px 120px",
-              padding: "12px 24px",
-              borderBottom: `1px solid ${colors.cardBorder}`,
-              backgroundColor: colors.elevatedSurface,
-            }}
-          >
-            {["#", "Address", "Deposit (MUSD)", "Win Odds"].map((h) => (
-              <span
-                key={h}
-                style={{
-                  fontSize: "0.72rem",
-                  fontWeight: 700,
-                  color: colors.textTertiary,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                {h}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {isLoading ? (
-          <div
-            style={{
-              padding: "40px",
-              textAlign: "center",
-              color: colors.textSecondary,
-              fontSize: "0.9rem",
-            }}
-          >
-            Loading participants...
-          </div>
-        ) : participants.length === 0 ? (
-          <div
-            style={{
-              padding: "56px 24px",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <span style={{ fontSize: "2.5rem" }}>🏊</span>
-            <p
+        <div
+          style={{
+            backgroundColor: colors.surface,
+            border: `1px solid ${colors.cardBorder}`,
+            borderRadius: "24px",
+            overflow: "hidden",
+          }}
+        >
+          {/* table header */}
+          {participants.length > 0 && (
+            // REPLACE the entire header inner map with this:
+            <div
               style={{
-                color: colors.textSecondary,
-                fontSize: "0.9rem",
-                margin: 0,
+                display: "grid",
+                gridTemplateColumns: "40px 38px 1fr 180px 120px",
+                padding: "12px 24px",
+                borderBottom: `1px solid ${colors.cardBorder}`,
+                backgroundColor: colors.elevatedSurface,
               }}
             >
-              No depositors yet — be the first to join the pool.
-            </p>
-          </div>
-        ) : (
-          sorted.map((p, i) => {
-            const depositDisplay = Number(
-              formatUnits(p.depositWad, 18),
-            ).toLocaleString(undefined, { maximumFractionDigits: 4 });
-
-            const barWidth = Math.min(p.oddsPercent * 2, 100);
-
-            return (
-              <div
-                key={p.address}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "40px 1fr 180px 120px",
-                  padding: "16px 24px",
-                  borderBottom:
-                    i < sorted.length - 1
-                      ? `1px solid ${colors.cardBorder}`
-                      : "none",
-                  alignItems: "center",
-                  transition: "background-color 0.15s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
-                onClick={() => setSelectedAddress(p.address)}
-              >
-                {/* rank */}
+              {["#", "", "Address", "Deposit (MUSD)", "Win Odds"].map((h) => (
                 <span
+                  key={h}
                   style={{
-                    fontSize: "0.8rem",
+                    fontSize: "0.72rem",
                     fontWeight: 700,
-                    color: i === 0 ? colors.reward : colors.textTertiary,
+                    color: colors.textTertiary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
                   }}
                 >
-                  {i === 0
-                    ? "🥇"
-                    : i === 1
-                      ? "🥈"
-                      : i === 2
-                        ? "🥉"
-                        : `#${i + 1}`}
+                  {h}
                 </span>
+              ))}
+            </div>
+          )}
 
-                {/* address */}
+          {isLoading ? (
+            <div
+              style={{
+                padding: "40px",
+                textAlign: "center",
+                color: colors.textSecondary,
+                fontSize: "0.9rem",
+              }}
+            >
+              Loading participants...
+            </div>
+          ) : participants.length === 0 ? (
+            <div
+              style={{
+                padding: "56px 24px",
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <span style={{ fontSize: "2.5rem" }}>🏊</span>
+              <p
+                style={{
+                  color: colors.textSecondary,
+                  fontSize: "0.9rem",
+                  margin: 0,
+                }}
+              >
+                No depositors yet — be the first to join the pool.
+              </p>
+            </div>
+          ) : (
+            sorted.map((p, i) => {
+              const depositDisplay = Number(
+                formatUnits(p.depositWad, 18),
+              ).toLocaleString(undefined, { maximumFractionDigits: 4 });
+
+              const barWidth = Math.min(p.oddsPercent * 2, 100);
+
+              return (
                 <div
-                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                  key={p.address}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "40px 1fr 180px 120px",
+                    padding: "20px 30px",
+                    borderBottom:
+                      i < sorted.length - 1
+                        ? `1px solid ${colors.cardBorder}`
+                        : "none",
+                    alignItems: "center",
+                    transition: "background-color 0.15s",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
+                  onClick={() => setSelectedAddress(p.address)}
                 >
-                  <div
-                    style={{
-                      width: "28px",
-                      height: "28px",
-                      borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                      flexShrink: 0,
-                      opacity: 0.7,
-                    }}
-                  />
+                  {/* rank */}
                   <span
                     style={{
-                      fontFamily: "monospace",
-                      fontSize: "0.88rem",
-                      color: colors.textPrimary,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {shorten(p.address)}
-                  </span>
-                  <button
-                    onClick={() => handleCopy(p.address)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "0.72rem",
-                      color:
-                        copied === p.address
-                          ? colors.accent
-                          : colors.textTertiary,
-                      padding: "2px 6px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {copied === p.address ? "✓" : "copy"}
-                  </button>
-                </div>
-
-                {/* deposit */}
-                <span
-                  style={{
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {depositDisplay}
-                </span>
-
-                {/* odds bar */}
-                <div>
-                  <div
-                    style={{
-                      fontSize: "0.82rem",
+                      fontSize: "0.8rem",
                       fontWeight: 700,
-                      color: colors.primary,
-                      marginBottom: "4px",
+                      color: i === 0 ? colors.reward : colors.textTertiary,
                     }}
                   >
-                    {p.oddsPercent.toFixed(2)}%
-                  </div>
+                    {i === 0
+                      ? "🥇"
+                      : i === 1
+                        ? "🥈"
+                        : i === 2
+                          ? "🥉"
+                          : `#${i + 1}`}
+                  </span>
+
+                  {/* address */}
                   <div
                     style={{
-                      height: "4px",
-                      borderRadius: "999px",
-                      backgroundColor: `${colors.primary}22`,
-                      overflow: "hidden",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      justifySelf: "start",
                     }}
                   >
                     <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={
+                        theme === "light"
+                          ? "/profile-black.svg"
+                          : "/profile-white.svg"
+                      }
+                      alt="profile"
                       style={{
-                        height: "100%",
-                        width: `${barWidth}%`,
-                        borderRadius: "999px",
-                        background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
-                        transition: "width 0.4s ease",
+                        width: "30px",
+                        height: "30px",
+                        objectFit: "contain",
                       }}
-                    />
+                    />{" "}
+                  </div>
+                    <span
+                      style={{
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        color: colors.secondary,
+                        textAlign: "center",
+                        justifySelf: "center",
+                      }}
+                    >
+                      {shorten(p.address)}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(p.address)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.72rem",
+                        color:
+                          copied === p.address
+                            ? colors.accent
+                            : colors.textTertiary,
+                        padding: "2px 6px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {copied === p.address ? "✓" : "copy"}
+                    </button>
+                  </div>
+
+                  {/* deposit */}
+                  <span
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                      color: colors.textPrimary,
+                      textAlign: "center",
+                    }}
+                  >
+                    {depositDisplay}
+                  </span>
+
+                  {/* odds bar */}
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        color: colors.primary,
+                        marginBottom: "4px",
+                        alignItems: "center",
+                      }}
+                    >
+                      {p.oddsPercent.toFixed(2)}%
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
       </div>
       <PlayerModal
         address={selectedAddress}

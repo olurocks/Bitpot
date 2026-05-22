@@ -123,16 +123,6 @@ function InfoBox({
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "3px",
-          background: `linear-gradient(90deg, ${accent ?? colors.primary}, ${colors.accent})`,
-        }}
-      />
       <span
         style={{
           fontSize: "0.78rem",
@@ -195,31 +185,30 @@ export default function ProfilePage() {
   // user's wins
   const myWins = useMemo(
     () =>
-      draws.filter(
-        (d) => d.winner.toLowerCase() === address?.toLowerCase()
-      ),
-    [draws, address]
+      draws.filter((d) => d.winner.toLowerCase() === address?.toLowerCase()),
+    [draws, address],
   );
 
   const totalWonWad = useMemo(
     () => myWins.reduce((a, d) => a + d.prizeNative, BigInt(0)),
-    [myWins]
+    [myWins],
   );
 
   const depositDisplay =
     depositWad != null
-      ? Number(formatUnits(depositWad as bigint, 18)).toLocaleString(undefined, {
-          maximumFractionDigits: 4,
-        })
+      ? Number(formatUnits(depositWad as bigint, 18)).toLocaleString(
+          undefined,
+          {
+            maximumFractionDigits: 4,
+          },
+        )
       : "0";
 
   const isInPool = depositWad != null && (depositWad as bigint) > BigInt(0);
 
   if (!isConnected || !address) {
     return (
-      <main
-        style={{ minHeight: "100vh", backgroundColor: colors.background }}
-      >
+      <main style={{ minHeight: "100vh", backgroundColor: colors.background }}>
         <NotConnected colors={colors} />
       </main>
     );
@@ -234,7 +223,6 @@ export default function ProfilePage() {
       }}
     >
       <div style={{ maxWidth: "880px", margin: "0 auto" }}>
-
         {/* ── Identity card ─────────────────────────────────────────────── */}
         <div
           style={{
@@ -250,33 +238,30 @@ export default function ProfilePage() {
             overflow: "hidden",
           }}
         >
-          {/* gradient accent */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "4px",
-              background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent}, ${colors.secondary})`,
-            }}
-          />
-
           {/* avatar */}
           <div
             style={{
               width: "72px",
               height: "72px",
               borderRadius: "50%",
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+              border: `2px solid ${colors.textTertiary}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "2rem",
               flexShrink: 0,
+              padding: "2px",
             }}
           >
-            {myWins.length > 0 ? "🏆" : "👤"}
+            <img
+              src={
+                theme === "light" ? "/profile-black.svg" : "/profile-white.svg"
+              }
+              alt="profile"
+              style={{
+                objectFit: "contain",
+              }}
+            />
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -326,8 +311,8 @@ export default function ProfilePage() {
               {myWins.length > 0
                 ? `${myWins.length} draw${myWins.length > 1 ? "s" : ""} won · Keep holding to improve your odds`
                 : isInPool
-                ? "Active depositor · Odds improve the longer you stay"
-                : "Not currently in the pool"}
+                  ? "Active depositor · Odds improve the longer you stay"
+                  : "Not currently in the pool"}
             </p>
           </div>
 
@@ -426,7 +411,7 @@ export default function ProfilePage() {
                 textDecoration: "none",
               }}
             >
-              All draws →
+              All draws
             </Link>
           </div>
 
@@ -449,7 +434,8 @@ export default function ProfilePage() {
                   margin: 0,
                 }}
               >
-                No wins yet — your odds increase the longer you stay in the pool.
+                No wins yet — your odds increase the longer you stay in the
+                pool.
               </p>
             </div>
           ) : (
@@ -464,7 +450,7 @@ export default function ProfilePage() {
                   backgroundColor: colors.elevatedSurface,
                 }}
               >
-                {["Draw #", "Prize (MEZO)", "USD Value", "Date"].map((h) => (
+                {["Draw", "Prize (MEZO)", "USD Value", "Date"].map((h) => (
                   <span
                     key={h}
                     style={{
@@ -501,7 +487,7 @@ export default function ProfilePage() {
                       color: colors.textTertiary,
                     }}
                   >
-                    #{draw.drawId.toString()}
+                    {draw.drawId.toString()}
                   </span>
                   <span
                     style={{
@@ -521,7 +507,9 @@ export default function ProfilePage() {
                   >
                     USD price TBD
                   </span>
-                  <span style={{ fontSize: "0.82rem", color: colors.textSecondary }}>
+                  <span
+                    style={{ fontSize: "0.82rem", color: colors.textSecondary }}
+                  >
                     {formatDate(draw.timestamp)}
                   </span>
                 </div>

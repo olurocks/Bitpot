@@ -11,13 +11,21 @@ export function Header() {
   const colors = themeColors[theme];
 
   return (
-    <header
-      style={{
-        backgroundColor: colors.elevatedSurface,
-        borderBottom: `1px solid ${colors.accent}80`,
-        backdropFilter: "blur(12px)",
-      }}
-    >
+<header
+  style={{
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: theme === "dark"
+      ? "rgba(18, 32, 56, 0.72)"
+      : "rgba(252, 252, 253, 0.72)",
+    borderBottom: `1px solid ${colors.accent}40`,
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+  }}
+>
       <div
         style={{
           maxWidth: "1152px",

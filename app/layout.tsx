@@ -4,6 +4,7 @@ import { Providers } from "@/components/Providers";
 import { Header } from "@/components/layout/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PageTransition } from "@/components/PageTransition";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "BitPot",
@@ -22,7 +23,8 @@ export default function RootLayout({
           <Providers>
             <Header />
             <PageTransition>
-              <main>{children}</main>
+              <main style={{ paddingTop: "73px" }}>{children}</main>
+              <Footer />
             </PageTransition>
           </Providers>
         </body>

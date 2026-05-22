@@ -22,7 +22,14 @@ export function PoolStats() {
   const colors = themeColors[theme.theme];
 
   return (
-    <div className="grid gap-4 md:grid-rows-3">
+    <div
+      style={{
+        display: "grid",
+        gap: "16px",
+        justifyContent: "center",
+      }}
+    >
+      {" "}
       <Stat label="Prize (MEZO)" value={formatToken(prize)} colors={colors} />
       <Stat
         label="Total Deposits (MUSD)"
@@ -50,7 +57,12 @@ export function Stat({ label, value, colors }: StatProps) {
 
         display: "flex",
         flexDirection: "column",
+        maxWidth:"100%",
+        width:"400px",
+
+        alignItems: "center",
         gap: "10px",
+        // minHeight: "150px",
 
         boxShadow:
           colors.background === "#07101F"
@@ -84,17 +96,6 @@ export function Stat({ label, value, colors }: StatProps) {
       >
         {value}
       </span>
-
-      {/* ACCENT BAR */}
-      <div
-        style={{
-          width: "64px",
-          height: "6px",
-          borderRadius: "999px",
-          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
-          marginTop: "4px",
-        }}
-      />
     </div>
   );
 }

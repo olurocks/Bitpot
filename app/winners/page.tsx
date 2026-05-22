@@ -193,9 +193,10 @@ export default function WinnersPage() {
                 padding: "14px 24px",
                 borderBottom: `1px solid ${colors.cardBorder}`,
                 backgroundColor: colors.elevatedSurface,
+                textAlign: "center",
               }}
             >
-              {["Draw #", "Winner", "Prize (MEZO)", "Odds", "Date"].map((h) => (
+              {["Draw ", "Winner", "Prize (MEZO)", "Odds", "Date"].map((h) => (
                 <span
                   key={h}
                   style={{
@@ -239,6 +240,7 @@ export default function WinnersPage() {
                   alignItems: "center",
                   transition: "background-color 0.15s",
                   cursor: "pointer",
+                  textAlign: "center",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
@@ -258,7 +260,7 @@ export default function WinnersPage() {
                     color: colors.textTertiary,
                   }}
                 >
-                  #{draw.drawId.toString()}
+                  {draw.drawId.toString()}
                 </span>
 
                 {/* winner */}
@@ -271,17 +273,22 @@ export default function WinnersPage() {
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: "0.65rem",
-                      fontWeight: 800,
-                      color: colors.white,
                       flexShrink: 0,
+                      paddingRight: "10px"
                     }}
                   >
-                    🏆
+                    <img
+                      src="/crown.svg"
+                      alt="profile"
+                      style={{
+                        // width: "18px",
+                        // height: "18px",
+                        objectFit: "contain",
+                      }}
+                    />{" "}
                   </div>
                   <span
                     style={{
