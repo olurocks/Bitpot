@@ -14,6 +14,8 @@ import Link from "next/link";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { PaginationControls } from "@/components/PaginationControls";
+import { usePagination } from "@/hooks/usePagination";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -208,6 +210,8 @@ export default function ProfilePage() {
 
   const isInPool = depositWad != null && (depositWad as bigint) > BigInt(0);
 
+  const { paginated, page, totalPages, next, prev } = usePagination(myWins, 10);
+
   if (!isConnected || !address) {
     return (
       <main style={{ minHeight: "100vh", backgroundColor: colors.background }}>
@@ -313,7 +317,7 @@ export default function ProfilePage() {
                 margin: 0,
               }}
             >
-              {myWins.length > 0
+              {paginated.length > 0
                 ? `${myWins.length} draw${myWins.length > 1 ? "s" : ""} won · Keep holding to improve your odds`
                 : isInPool
                   ? "Active depositor · Odds improve the longer you stay"
@@ -470,30 +474,31 @@ export default function ProfilePage() {
                   backgroundColor: colors.elevatedSurface,
                 }}
               >
-                {!isMobile && ["Draw", "Prize (MEZO)", "USD Value", "Date"].map((h) => (
-                  <span
-                    key={h}
-                    style={{
-                      fontSize: "0.72rem",
-                      fontWeight: 700,
-                      color: colors.textTertiary,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    {h}
-                  </span>
-                ))}
+                {!isMobile &&
+                  ["Draw", "Prize (MEZO)", "USD Value", "Date"].map((h) => (
+                    <span
+                      key={h}
+                      style={{
+                        fontSize: "0.72rem",
+                        fontWeight: 700,
+                        color: colors.textTertiary,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      {h}
+                    </span>
+                  ))}
               </div>
 
-              {[...myWins].reverse().map((draw, i) =>
+              {[...paginated].reverse().map((draw, i) =>
                 isMobile ? (
                   <div
                     key={draw.drawId.toString()}
                     style={{
                       padding: "16px",
                       borderBottom:
-                        i < myWins.length - 1
+                        i < paginated.length - 1
                           ? `1px solid ${colors.cardBorder}`
                           : "none",
                     }}
@@ -566,7 +571,7 @@ export default function ProfilePage() {
                       gridTemplateColumns: "80px 1fr 160px 180px",
                       padding: "16px 24px",
                       borderBottom:
-                        i < myWins.length - 1
+                        i < paginated.length - 1
                           ? `1px solid ${colors.cardBorder}`
                           : "none",
                       alignItems: "center",
@@ -612,6 +617,14 @@ export default function ProfilePage() {
               )}
             </>
           )}
+
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onNext={next}
+            onPrev={prev}
+            colors={colors}
+          />
         </div>
       </div>
     </main>

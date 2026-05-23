@@ -1,4 +1,3 @@
-import { reward } from "viem/tempo/actions";
 
 export const themeColors = {
   light: {

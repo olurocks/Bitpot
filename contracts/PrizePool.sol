@@ -7,28 +7,16 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface ISavingsVault {
-    function deposit(
-        uint256 assets,
-        address receiver
-    ) external returns (uint256 shares);
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address owner
-    ) external returns (uint256 shares);
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) external returns (uint256 assets);
-    function convertToShares(
-        uint256 assets
-    ) external view returns (uint256 shares);
-    function convertToAssets(
-        uint256 shares
-    ) external view returns (uint256 assets);
+    function deposit(uint256 amount) external;
+    function withdraw(uint256 amount) external;
     function balanceOf(address account) external view returns (uint256);
     function decimals() external view returns (uint8);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
 }
 
 interface IVaultGauge {
@@ -58,6 +46,8 @@ contract PrizePool is ReentrancyGuard, Ownable {
     uint256 public drawInterval;
     uint256 public lastDrawTime;
     uint256 public totalPrincipalWad;
+    uint256 public allTimeDepositWad;
+    uint256 public currentRoundDepositWad;
     uint256 public drawCount;
 
     // Demo-scale safety limits.
@@ -177,11 +167,9 @@ contract PrizePool is ReentrancyGuard, Ownable {
 
         musd.forceApprove(address(vault), received);
 
-        uint256 sharesBefore = IERC20(address(vault)).balanceOf(address(this));
-        vault.deposit(received, address(this));
-        uint256 sharesReceived = IERC20(address(vault)).balanceOf(
-            address(this)
-        ) - sharesBefore;
+        uint256 sharesBefore = vault.balanceOf(address(this));
+        vault.deposit(received);
+        uint256 sharesReceived = vault.balanceOf(address(this)) - sharesBefore;
         require(sharesReceived > 0, "no shares minted");
 
         IERC20(address(vault)).forceApprove(address(gauge), sharesReceived);
@@ -192,6 +180,8 @@ contract PrizePool is ReentrancyGuard, Ownable {
         depositsWad[msg.sender] += wadAmount;
         totalPrincipalWad += wadAmount;
         userShares[msg.sender] += sharesReceived;
+        allTimeDepositWad += wadAmount;
+        currentRoundDepositWad += wadAmount;
 
         if (!isDepositor[msg.sender]) {
             require(depositors.length < MAX_DEPOSITORS, "too many depositors");
@@ -230,11 +220,10 @@ contract PrizePool is ReentrancyGuard, Ownable {
 
         uint256 userBalBefore = musd.balanceOf(msg.sender);
 
-        // Redeem the exact shares attributed to this withdrawal.
-        // This avoids asking the vault for an exact asset amount after unstaking
-        // a proportional share amount, which could otherwise require more shares
-        // than this user actually unstaked.
-        vault.redeem(sharesToUnstake, msg.sender, address(this));
+        uint256 musdBefore = musd.balanceOf(address(this));
+        vault.withdraw(sharesToUnstake);
+        uint256 musdOut = musd.balanceOf(address(this)) - musdBefore;
+        musd.safeTransfer(msg.sender, musdOut);
 
         uint256 musdReturned = musd.balanceOf(msg.sender) - userBalBefore;
 
@@ -280,9 +269,6 @@ contract PrizePool is ReentrancyGuard, Ownable {
         drawPending = false;
         pendingDrawId = 0;
         drawRequestedAt = 0;
-        // Do not update lastDrawTime here.
-        // If a draw is cancelled after timeout, the next requestDraw should be
-        // immediately eligible instead of forcing users to wait another interval.
 
         emit DrawCancelled(cancelledDrawId);
     }
@@ -475,6 +461,7 @@ contract PrizePool is ReentrancyGuard, Ownable {
     function _resetRoundWeights() internal {
         totalWeight = 0;
         roundStartTime = block.timestamp;
+        currentRoundDepositWad = 0;
 
         for (uint256 i = 0; i < depositors.length; i++) {
             address user = depositors[i];
@@ -498,6 +485,14 @@ contract PrizePool is ReentrancyGuard, Ownable {
                 depositsWad[user] * (block.timestamp - lastWeightUpdate[user]);
         }
         return preview;
+    }
+
+    function getTotalWeight() public view returns (uint256) {
+        return _previewTotalWeight();
+    }
+
+    function getUserWeight(address user) public view returns (uint256) {
+        return _previewUserWeight(user);
     }
 
     function _addDepositor(address user) internal {

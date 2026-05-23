@@ -7,6 +7,8 @@ import { formatUnits } from "viem";
 import { useState } from "react";
 import { PlayerModal } from "../PlayerModal";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "../PaginationControls";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -34,6 +36,7 @@ export function ParticipantsTable() {
     if (sortBy === "deposit") return b.depositWad > a.depositWad ? 1 : -1;
     return b.oddsPercent - a.oddsPercent;
   });
+  const { paginated, page, totalPages, next, prev } = usePagination(sorted, 10);
 
   const SortBtn = ({ k, label }: { k: SortKey; label: string }) => (
     <button
@@ -187,12 +190,11 @@ export function ParticipantsTable() {
                 </p>
               </div>
             ) : (
-              sorted.map((p, i) => {
+              paginated.map((p, i) => {
+                const globalIndex = page * 20 + i;
                 const depositDisplay = Number(
                   formatUnits(p.depositWad, 18),
                 ).toLocaleString(undefined, { maximumFractionDigits: 4 });
-
-                const barWidth = Math.min(p.oddsPercent * 2, 100);
 
                 return isMobile ? (
                   <div
@@ -218,16 +220,19 @@ export function ParticipantsTable() {
                       <span
                         style={{
                           fontWeight: 700,
-                          color: i === 0 ? colors.reward : colors.textPrimary,
+                          color:
+                            globalIndex === 0
+                              ? colors.reward
+                              : colors.textPrimary,
                         }}
                       >
-                        {i === 0
+                        {globalIndex === 0
                           ? "🥇"
-                          : i === 1
+                          : globalIndex === 1
                             ? "🥈"
-                            : i === 2
+                            : globalIndex === 2
                               ? "🥉"
-                              : `#${i + 1}`}
+                              : `#${globalIndex + 1}`}
                       </span>
 
                       <span
@@ -342,16 +347,19 @@ export function ParticipantsTable() {
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: 700,
-                        color: i === 0 ? colors.reward : colors.textTertiary,
+                        color:
+                          globalIndex === 0
+                            ? colors.reward
+                            : colors.textTertiary,
                       }}
                     >
-                      {i === 0
+                      {globalIndex === 0
                         ? "🥇"
-                        : i === 1
+                        : globalIndex === 1
                           ? "🥈"
-                          : i === 2
+                          : globalIndex === 2
                             ? "🥉"
-                            : `#${i + 1}`}
+                            : `#${globalIndex + 1}`}
                     </span>
 
                     {/* address */}
@@ -454,6 +462,13 @@ export function ParticipantsTable() {
               })
             )}
           </div>
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onNext={next}
+            onPrev={prev}
+            colors={colors}
+          />
         </div>
       </div>
       <PlayerModal

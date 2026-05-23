@@ -217,7 +217,6 @@ function WhyMezo({ colors }: { colors: any }) {
         <div
           key={i}
           style={{
-            backgroundColor: colors.surface,
             border: `1px solid ${colors.cardBorder}`,
             borderRadius: "20px",
             padding: "24px",
@@ -237,7 +236,6 @@ function WhyMezo({ colors }: { colors: any }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: `${colors.primary}10`,
             }}
           >
             <img
@@ -293,7 +291,6 @@ function StatCard({
     <div
       style={{
         border: `1px solid ${colors.cardBorder}`,
-        boxShadow: accent ? `0 0 8px ${accent}40` : "none",
         borderRadius: "18px",
         padding: "20px 24px",
         display: "flex",
