@@ -5,7 +5,8 @@ import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { useAllTimeStats } from "@/hooks/useAllTimeStats";
 import { formatToken } from "@/lib/format";
-import { use, useEffect, useRef, useState } from "react";
+import {  useEffect, useRef, useState } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 function AnimatedNumber({
   value,
@@ -54,7 +55,7 @@ function HowItWorks({ colors }: { colors: any }) {
       desc: "At each interval, a provably fair draw selects a winner weighted by deposit size and time held.",
     },
     {
-      icon: { light: "/winner-white.svg", dark: "/winner-white.svg" },
+      icon: { light: "/winner-black.svg", dark: "/winner-white.svg" },
       title: "Winner Gets Prize",
       desc: "The winner receives all accrued MEZO rewards. Everyone else keeps their full principal.",
     },
@@ -77,7 +78,7 @@ function HowItWorks({ colors }: { colors: any }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
           gap: "24px",
           position: "relative",
         }}
@@ -170,6 +171,7 @@ function HowItWorks({ colors }: { colors: any }) {
 
 function WhyMezo({ colors }: { colors: any }) {
   const { theme } = useTheme();
+  // const isMobile = useIsMobile();
   const points = [
     {
       icon: { light: "/bitcoin-black.svg", dark: "/bitcoin-white.svg" },
@@ -187,7 +189,7 @@ function WhyMezo({ colors }: { colors: any }) {
       desc: "MEZO rewards come from real network activity — bridging fees, swap fees, MUSD interest — not inflationary token printing.",
     },
     {
-      icon: "/piggy.svg",
+      icon: "/btc.svg",
       title: "Never Sell Your Bitcoin",
       desc: "Earn, save, and win without ever selling, wrapping, or giving up custody of your BTC. Mezo keeps Bitcoin at the center.",
     },
@@ -207,7 +209,7 @@ function WhyMezo({ colors }: { colors: any }) {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
         gap: "20px",
       }}
     >
@@ -333,6 +335,8 @@ function StatCard({
 export default function Home() {
   const { theme } = useTheme();
   const colors = themeColors[theme];
+  const isMobile = useIsMobile();
+
 
   const {
     allTimeDepositWad,
@@ -354,7 +358,7 @@ export default function Home() {
       <section
         style={{
           position: "relative",
-          padding: "100px 24px 80px",
+          padding: isMobile ? "90px 16px 56px" : "100px 24px 80px",
           textAlign: "center",
           overflow: "hidden",
         }}
@@ -456,7 +460,13 @@ export default function Home() {
           </p>
 
           <div
-            style={{ display: "flex", gap: "16px", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              gap: "16px",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
             <Link
               href="/pool"
@@ -470,6 +480,9 @@ export default function Home() {
                 textDecoration: "none",
                 display: "inline-block",
                 letterSpacing: "0.01em",
+                width: isMobile ? "100%" : "auto",
+                maxWidth: "320px",
+                textAlign: "center",
               }}
             >
               Enter the Pool
@@ -486,6 +499,9 @@ export default function Home() {
                 textDecoration: "none",
                 display: "inline-block",
                 border: `1.5px solid ${colors.cardBorder}`,
+                width: isMobile ? "100%" : "auto",
+                maxWidth: "320px",
+                textAlign: "center",
               }}
             >
               View Winners
@@ -505,7 +521,7 @@ export default function Home() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: "20px",
           }}
         >
@@ -580,7 +596,7 @@ export default function Home() {
           backgroundColor: colors.surface,
           borderTop: `1px solid ${colors.cardBorder}`,
           borderBottom: `1px solid ${colors.cardBorder}`,
-          padding: "80px 24px",
+          padding: isMobile ? "56px 16px" : "80px 24px",
         }}
       >
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -616,7 +632,7 @@ export default function Home() {
       <section
         style={{
           textAlign: "center",
-          padding: "100px 24px 80px",
+          padding: isMobile ? "90px 16px 56px" : "100px 24px 80px",
           position: "relative",
           overflow: "hidden",
         }}
@@ -646,7 +662,7 @@ export default function Home() {
             <br />
             <span
               style={{
-                color:colors.secondary,
+                color: colors.secondary,
               }}
             >
               Your odds. Always improving.

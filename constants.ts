@@ -39,7 +39,7 @@ export const themeColors = {
     primaryHover: "#3EE5E0",
     primaryPressed: "#14B8B3",
 
-    primary: "#D42180",
+    primary: "#067954",
     accent: "#62D8A5",
     reward: "#FFC83D",
 

@@ -13,6 +13,7 @@ import { formatUnits } from "viem";
 import Link from "next/link";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { useMemo, useState } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -157,6 +158,7 @@ function InfoBox({
 // ─── Profile page ─────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const colors = themeColors[theme];
   const { address, isConnected } = useAccount();
 
@@ -219,7 +221,7 @@ export default function ProfilePage() {
       style={{
         minHeight: "100vh",
         backgroundColor: colors.background,
-        padding: "48px 24px",
+        padding: isMobile ? "28px 16px" : "48px 24px",
       }}
     >
       <div style={{ maxWidth: "880px", margin: "0 auto" }}>
@@ -229,11 +231,13 @@ export default function ProfilePage() {
             backgroundColor: colors.surface,
             border: `1px solid ${colors.cardBorder}`,
             borderRadius: "28px",
-            padding: "32px",
             marginBottom: "28px",
             display: "flex",
-            alignItems: "center",
-            gap: "24px",
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "center" : "center",
+            textAlign: isMobile ? "center" : "left",
+            gap: isMobile ? "16px" : "24px",
+            padding: isMobile ? "24px 18px" : "32px",
             position: "relative",
             overflow: "hidden",
           }}
@@ -268,6 +272,7 @@ export default function ProfilePage() {
             <div
               style={{
                 display: "flex",
+                justifyContent: isMobile ? "center" : "flex-start",
                 alignItems: "center",
                 gap: "12px",
                 flexWrap: "wrap",
@@ -317,13 +322,26 @@ export default function ProfilePage() {
           </div>
 
           {/* CTA buttons */}
-          <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              width: isMobile ? "100%" : "auto",
+              justifyContent: "center",
+              gap: "10px",
+              flexShrink: 0,
+            }}
+          >
+            {" "}
             <Link
               href="/pool"
               style={{
                 backgroundColor: colors.primary,
                 color: colors.white,
-                padding: "10px 20px",
+                padding: isMobile ? "12px 24px" : "10px 20px",
+
+                width: isMobile ? "100%" : "auto",
+
+                textAlign: "center",
                 borderRadius: "999px",
                 fontWeight: 700,
                 fontSize: "0.85rem",
@@ -336,43 +354,45 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Stats grid ────────────────────────────────────────────────── */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "16px",
-            marginBottom: "28px",
-          }}
-        >
-          <InfoBox
-            label="My Deposit"
-            value={depositDisplay}
-            sub="MUSD"
-            colors={colors}
-            accent={colors.primary}
-          />
-          <InfoBox
-            label="Win Chance"
-            value={`${oddsPercent}%`}
-            sub="next draw"
-            colors={colors}
-            accent={colors.accent}
-          />
-          <InfoBox
-            label="Draws Won"
-            value={myWins.length.toString()}
-            sub="all time"
-            colors={colors}
-            accent={colors.secondary}
-          />
-          <InfoBox
-            label="MEZO Won"
-            value={formatToken(totalWonWad)}
-            sub="total prizes"
-            colors={colors}
-            accent={colors.reward}
-          />
-        </div>
+        {!isMobile && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
+              gap: "16px",
+              marginBottom: "28px",
+            }}
+          >
+            <InfoBox
+              label="My Deposit"
+              value={depositDisplay}
+              sub="MUSD"
+              colors={colors}
+              accent={colors.primary}
+            />
+            <InfoBox
+              label="Win Chance"
+              value={`${oddsPercent}%`}
+              sub="next draw"
+              colors={colors}
+              accent={colors.accent}
+            />
+            <InfoBox
+              label="Draws Won"
+              value={myWins.length.toString()}
+              sub="all time"
+              colors={colors}
+              accent={colors.secondary}
+            />
+            <InfoBox
+              label="MEZO Won"
+              value={formatToken(totalWonWad)}
+              sub="total prizes"
+              colors={colors}
+              accent={colors.reward}
+            />
+          </div>
+        )}
 
         {/* ── Win history ───────────────────────────────────────────────── */}
         <div
@@ -450,7 +470,7 @@ export default function ProfilePage() {
                   backgroundColor: colors.elevatedSurface,
                 }}
               >
-                {["Draw", "Prize (MEZO)", "USD Value", "Date"].map((h) => (
+                {!isMobile && ["Draw", "Prize (MEZO)", "USD Value", "Date"].map((h) => (
                   <span
                     key={h}
                     style={{
@@ -466,54 +486,130 @@ export default function ProfilePage() {
                 ))}
               </div>
 
-              {[...myWins].reverse().map((draw, i) => (
-                <div
-                  key={draw.drawId.toString()}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "80px 1fr 160px 180px",
-                    padding: "16px 24px",
-                    borderBottom:
-                      i < myWins.length - 1
-                        ? `1px solid ${colors.cardBorder}`
-                        : "none",
-                    alignItems: "center",
-                  }}
-                >
-                  <span
+              {[...myWins].reverse().map((draw, i) =>
+                isMobile ? (
+                  <div
+                    key={draw.drawId.toString()}
                     style={{
-                      fontSize: "0.9rem",
-                      fontWeight: 700,
-                      color: colors.textTertiary,
+                      padding: "16px",
+                      borderBottom:
+                        i < myWins.length - 1
+                          ? `1px solid ${colors.cardBorder}`
+                          : "none",
                     }}
                   >
-                    {draw.drawId.toString()}
-                  </span>
-                  <span
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: colors.textPrimary,
+                        }}
+                      >
+                        Draw #{draw.drawId}
+                      </span>
+
+                      <span
+                        style={{
+                          color: colors.textSecondary,
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        {formatDate(draw.timestamp)}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        Prize
+                      </span>
+
+                      <span
+                        style={{
+                          color: colors.reward,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {formatToken(draw.prizeNative)} MEZO
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        fontSize: "0.8rem",
+                        color: colors.textTertiary,
+                      }}
+                    >
+                      USD price TBD
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    key={draw.drawId.toString()}
                     style={{
-                      fontSize: "0.95rem",
-                      fontWeight: 700,
-                      color: colors.reward,
+                      display: "grid",
+                      gridTemplateColumns: "80px 1fr 160px 180px",
+                      padding: "16px 24px",
+                      borderBottom:
+                        i < myWins.length - 1
+                          ? `1px solid ${colors.cardBorder}`
+                          : "none",
+                      alignItems: "center",
                     }}
                   >
-                    {formatToken(draw.prizeNative)} MEZO
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.85rem",
-                      color: colors.textTertiary,
-                      fontStyle: "italic",
-                    }}
-                  >
-                    USD price TBD
-                  </span>
-                  <span
-                    style={{ fontSize: "0.82rem", color: colors.textSecondary }}
-                  >
-                    {formatDate(draw.timestamp)}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      style={{
+                        fontSize: "0.9rem",
+                        fontWeight: 700,
+                        color: colors.textTertiary,
+                      }}
+                    >
+                      {draw.drawId.toString()}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: 700,
+                        color: colors.reward,
+                      }}
+                    >
+                      {formatToken(draw.prizeNative)} MEZO
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "0.85rem",
+                        color: colors.textTertiary,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      USD price TBD
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "0.82rem",
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {formatDate(draw.timestamp)}
+                    </span>
+                  </div>
+                ),
+              )}
             </>
           )}
         </div>

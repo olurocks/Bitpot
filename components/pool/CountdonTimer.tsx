@@ -98,6 +98,7 @@ export function CountdownTimer() {
   useEffect(() => {
     recompute();
   }, [recompute]);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   // Tick every second
   useEffect(() => {
@@ -121,60 +122,6 @@ export function CountdownTimer() {
       ? "🎲 Draw Window Open"
       : null;
 
-  // update lastDrawTime when contract returns data
-  // useEffect(() => {
-  //   if (lastDraw.isLoading) {
-  //     setIsLoading(true);
-  //     return;
-  //   }
-
-  //   const l = toBigInt(lastDraw.data);
-  //   if (l !== null) {
-  //     setLastDrawTime(l);
-  //     setIsLoading(false);
-  //   }
-  // }, [lastDraw.data, lastDraw.isLoading]);
-
-  // compute timeLeft from lastDrawTime (draws every 5 minutes)
-  // const pad = (value: number) => String(value).padStart(2, "0");
-
-  // const formatDuration = (seconds: number) => {
-  //   if (seconds <= 0) return "00:00:00:00";
-  //   const days = Math.floor(seconds / 86400);
-  //   const hours = Math.floor((seconds % 86400) / 3600);
-  //   const minutes = Math.floor((seconds % 3600) / 60);
-  //   const secs = seconds % 60;
-  //   return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
-  // };
-
-  // useEffect(() => {
-  //   if (!isDrawTime) return;
-  //   setIsLoading(true);
-  //   lastDraw.refetch?.();
-  // }, [isDrawTime, lastDraw.refetch]);
-
-  // useEffect(() => {
-  //   if (isLoading) return;
-
-  //   if (isDrawTime) {
-  //     setTimeLeft(0);
-  //     return;
-  //   }
-
-  //   const id = setInterval(() => {
-  //     setTimeLeft((prev) => {
-  //       if (prev <= 1) {
-  //         clearInterval(id);
-  //         setIsDrawTime(true);
-  //         return 0;
-  //       }
-  //       return prev - 1;
-  //     });
-  //   }, 1000);
-
-  //   return () => clearInterval(id);
-  // }, [isLoading, isDrawTime]);
-
   return (
     <div
       style={{
@@ -190,8 +137,16 @@ export function CountdownTimer() {
         label="Next Draw In"
         value={drawReady ? "DRAW READY" : formatDuration(timeLeft)}
         colors={colors}
-        labelSize="2rem"
-        valueSize={drawReady ? "3.5rem" : "7rem"}
+        labelSize={isMobile ? "1rem" : "2rem"}
+        valueSize={
+          isMobile
+            ? drawReady
+              ? "2rem"
+              : "3rem"
+            : drawReady
+              ? "3.5rem"
+              : "7rem"
+        }
       />
       {drawStatus && (
         <span
@@ -214,7 +169,7 @@ export function CountdownTimer() {
         style={{
           display: "grid",
           gap: "12px",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
           marginTop: "8px",
         }}
       >
@@ -268,10 +223,8 @@ export function CountdownTimer() {
               backgroundColor: colors.surface,
               border: `1px solid ${colors.cardBorder}`,
 
-              borderRadius: "32px",
-
-              padding: "32px",
-
+              padding: isMobile ? "20px" : "32px",
+              borderRadius: isMobile ? "22px" : "32px",
               boxShadow:
                 theme.theme === "dark"
                   ? "0 20px 60px rgba(0,0,0,0.45)"
@@ -326,8 +279,8 @@ export function CountdownTimer() {
               maxWidth: "480px",
               backgroundColor: colors.surface,
               border: `1px solid ${colors.cardBorder}`,
-              borderRadius: "32px",
-              padding: "32px",
+              padding: isMobile ? "20px" : "32px",
+              borderRadius: isMobile ? "22px" : "32px",
               boxShadow:
                 theme.theme === "dark"
                   ? "0 20px 60px rgba(0,0,0,0.45)"

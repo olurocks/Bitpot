@@ -4,9 +4,9 @@ import { useDrawHistory } from "@/hooks/useDrawHistory";
 import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { formatToken } from "@/lib/format";
-import { useState } from "react";
-import { formatUnits } from "viem";
+import { useState, useEffect } from "react";
 import { PlayerModal } from "@/components/PlayerModal";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -63,6 +63,7 @@ export default function WinnersPage() {
   const [selectedAddress, setSelectedAddress] = useState<`0x${string}` | null>(
     null,
   );
+  const isMobile = useIsMobile();
 
   // most recent first
   const sorted = [...draws].reverse();
@@ -72,10 +73,10 @@ export default function WinnersPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: colors.background,
-        padding: "48px 24px",
+        padding: isMobile ? "28px 16px" : "48px 24px",
       }}
     >
-      <div style={{ maxWidth: "960px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "960px", margin: "0 auto", textAlign: "center" }}>
         {/* header */}
         <div style={{ marginBottom: "40px" }}>
           <span
@@ -91,7 +92,7 @@ export default function WinnersPage() {
           </span>
           <h1
             style={{
-              fontSize: "2.4rem",
+              fontSize: "clamp(2rem, 8vw, 2.4rem)",
               fontWeight: 900,
               letterSpacing: "-0.04em",
               color: colors.textPrimary,
@@ -103,20 +104,21 @@ export default function WinnersPage() {
           <p
             style={{
               color: colors.textSecondary,
-              fontSize: "0.95rem",
+              fontSize: isMobile ? "0.9rem" : "0.95rem",
+              lineHeight: 1.6,
               margin: 0,
             }}
           >
-            Every draw, every winner — fully on-chain and verifiable.
+            Every draw, every winner on-chain verifiable.
           </p>
         </div>
 
         {/* summary strip */}
-        {draws.length > 0 && (
+        {draws.length > 0 && !isMobile && (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
               gap: "16px",
               marginBottom: "32px",
             }}
@@ -147,6 +149,10 @@ export default function WinnersPage() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "4px",
+
+                  alignItems: "center",
+                  textAlign: "center",
+                  justifyContent: "center",
                 }}
               >
                 <span
@@ -185,12 +191,12 @@ export default function WinnersPage() {
           }}
         >
           {/* table header */}
-          {draws.length > 0 && (
+          {draws.length > 0 && !isMobile && (
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "80px 1fr 160px 100px 180px",
-                padding: "14px 24px",
+                gridTemplateColumns: "70px 1fr 150px 90px 160px",
+                padding: isMobile ? "12px 18px" : "14px 24px",
                 borderBottom: `1px solid ${colors.cardBorder}`,
                 backgroundColor: colors.elevatedSurface,
                 textAlign: "center",
@@ -226,126 +232,215 @@ export default function WinnersPage() {
           ) : draws.length === 0 ? (
             <EmptyState colors={colors} />
           ) : (
-            sorted.map((draw, i) => (
-              <div
-                key={draw.drawId.toString()}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "80px 1fr 160px 100px 180px",
-                  padding: "18px 24px",
-                  borderBottom:
-                    i < sorted.length - 1
-                      ? `1px solid ${colors.cardBorder}`
-                      : "none",
-                  alignItems: "center",
-                  transition: "background-color 0.15s",
-                  cursor: "pointer",
-                  textAlign: "center",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
-                onClick={() => {
-                  setSelectedAddress(draw.winner);
-                }}
-              >
-                {/* draw id */}
-                <span
+            sorted.map((draw, i) =>
+              isMobile ? (
+                <div
+                  key={draw.drawId.toString()}
+                  onClick={() => setSelectedAddress(draw.winner)}
                   style={{
-                    fontSize: "0.9rem",
-                    fontWeight: 700,
-                    color: colors.textTertiary,
+                    padding: "16px",
+                    borderBottom:
+                      i < sorted.length - 1
+                        ? `1px solid ${colors.cardBorder}`
+                        : "none",
                   }}
                 >
-                  {draw.drawId.toString()}
-                </span>
-
-                {/* winner */}
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
-                >
-                  {/* avatar circle */}
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      paddingRight: "10px"
+                      justifyContent: "space-between",
+                      marginBottom: "12px",
                     }}
                   >
-                    <img
-                      src="/crown.svg"
-                      alt="profile"
+                    <span
                       style={{
-                        // width: "18px",
-                        // height: "18px",
-                        objectFit: "contain",
+                        fontWeight: 700,
+                        color: colors.textPrimary,
                       }}
-                    />{" "}
+                    >
+                      Draw #{draw.drawId.toString()}
+                    </span>
+
+                    <span
+                      style={{
+                        color: colors.textSecondary,
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      {formatDate(draw.timestamp)}
+                    </span>
                   </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <img src="/crown.svg" alt="winner" width={28} height={28} />
+
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        color: colors.textPrimary,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {shorten(draw.winner)}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      Prize
+                    </span>
+
+                    <span
+                      style={{
+                        color: colors.reward,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {formatToken(draw.prizeNative)} MEZO
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={draw.drawId.toString()}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "80px 1fr 160px 100px 180px",
+                    padding: isMobile ? "16px 18px" : "18px 24px",
+                    borderBottom:
+                      i < sorted.length - 1
+                        ? `1px solid ${colors.cardBorder}`
+                        : "none",
+                    alignItems: "center",
+                    transition: "background-color 0.15s",
+                    cursor: "pointer",
+                    textAlign: "center",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = `${colors.accent}08`)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
+                  onClick={() => {
+                    setSelectedAddress(draw.winner);
+                  }}
+                >
+                  {/* draw id */}
                   <span
                     style={{
                       fontSize: "0.9rem",
-                      fontWeight: 600,
-                      color: colors.textPrimary,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {shorten(draw.winner)}
-                  </span>
-                </div>
-
-                {/* prize */}
-                <div>
-                  <span
-                    style={{
-                      fontSize: "0.95rem",
                       fontWeight: 700,
-                      color: colors.reward,
+                      color: colors.textTertiary,
                     }}
                   >
-                    {formatToken(draw.prizeNative)} MEZO
+                    {draw.drawId.toString()}
                   </span>
+
+                  {/* winner */}
                   <div
                     style={{
-                      fontSize: "0.75rem",
-                      color: colors.textTertiary,
-                      marginTop: "2px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
                     }}
                   >
-                    USD price TBD
+                    {/* avatar circle */}
+                    <div
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        paddingRight: "10px",
+                      }}
+                    >
+                      <img
+                        src="/crown.svg"
+                        alt="profile"
+                        style={{
+                          // width: "18px",
+                          // height: "18px",
+                          objectFit: "contain",
+                        }}
+                      />{" "}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "0.9rem",
+                        fontWeight: 600,
+                        color: colors.textPrimary,
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {shorten(draw.winner)}
+                    </span>
                   </div>
+
+                  {/* prize */}
+                  <div>
+                    <span
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: 700,
+                        color: colors.reward,
+                      }}
+                    >
+                      {formatToken(draw.prizeNative)} MEZO
+                    </span>
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: colors.textTertiary,
+                        marginTop: "2px",
+                      }}
+                    >
+                      USD price TBD
+                    </div>
+                  </div>
+
+                  {/* odds placeholder — prizeWad / totalWeight not stored per draw, show — */}
+                  <span
+                    style={{
+                      fontSize: "0.85rem",
+                      color: colors.textSecondary,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    —
+                  </span>
+
+                  {/* date */}
+                  <span
+                    style={{
+                      fontSize: "0.82rem",
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {formatDate(draw.timestamp)}
+                  </span>
                 </div>
-
-                {/* odds placeholder — prizeWad / totalWeight not stored per draw, show — */}
-                <span
-                  style={{
-                    fontSize: "0.85rem",
-                    color: colors.textSecondary,
-                    fontStyle: "italic",
-                  }}
-                >
-                  —
-                </span>
-
-                {/* date */}
-                <span
-                  style={{
-                    fontSize: "0.82rem",
-                    color: colors.textSecondary,
-                  }}
-                >
-                  {formatDate(draw.timestamp)}
-                </span>
-              </div>
-            ))
+              ),
+            )
           )}
         </div>
       </div>

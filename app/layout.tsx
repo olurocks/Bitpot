@@ -23,7 +23,7 @@ export default function RootLayout({
           <Providers>
             <Header />
             <PageTransition>
-              <main style={{ paddingTop: "73px" }}>{children}</main>
+              <main style={{ paddingTop: "70px" }}>{children}</main>
               <Footer />
             </PageTransition>
           </Providers>

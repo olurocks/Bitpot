@@ -7,6 +7,7 @@ import { useDrawHistory } from "@/hooks/useDrawHistory";
 import { useParticipants } from "@/hooks/useParticipants";
 import { formatToken } from "@/lib/format";
 import { PlayerModal } from "@/components/PlayerModal";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function shorten(addr: string) {
@@ -71,6 +72,7 @@ function LeaderRow({
   depositWad,
   oddsPercent,
   colors,
+  theme,
   onClick,
 }: {
   rank: number;
@@ -81,10 +83,9 @@ function LeaderRow({
   oddsPercent: number;
   colors: any;
   onClick: () => void;
+  theme: string;
 }) {
   const isTop3 = rank < 3;
-  const { theme } = useTheme();
-
   return (
     <div
       onClick={onClick}
@@ -140,7 +141,11 @@ function LeaderRow({
           }}
         >
           {rank === 0 ? (
-            <img src={"/crown.svg"} alt="crown" style={{objectFit: "contain"}}/>
+            <img
+              src={"/crown.svg"}
+              alt="crown"
+              style={{ objectFit: "contain" }}
+            />
           ) : (
             <img
               src={
@@ -339,6 +344,7 @@ export default function LeaderboardPage() {
 
   const isLoading = drawsLoading || participantsLoading;
   const totalPrizes = draws.reduce((a, d) => a + d.prizeNative, BigInt(0));
+  const isMobile = useIsMobile();
 
   return (
     <>
@@ -347,6 +353,7 @@ export default function LeaderboardPage() {
           minHeight: "100vh",
           backgroundColor: colors.background,
           padding: "48px 24px",
+          textAlign: "center",
         }}
       >
         <div style={{ maxWidth: "1020px", margin: "0 auto" }}>
@@ -389,9 +396,10 @@ export default function LeaderboardPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
               gap: "16px",
               marginBottom: "28px",
+              textAlign: "center",
             }}
           >
             {[
@@ -440,7 +448,15 @@ export default function LeaderboardPage() {
           </div>
 
           {/* ── sort controls ─────────────────────────────────────────── */}
-          <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              marginBottom: "16px",
+              flexWrap: "wrap",
+            }}
+          >
+            {" "}
             <SortBtn
               k="wins"
               label="Most Wins"
@@ -474,7 +490,7 @@ export default function LeaderboardPage() {
             }}
           >
             {/* table header */}
-            {leaderboard.length > 0 && (
+            {leaderboard.length > 0 && !isMobile && (
               <div
                 style={{
                   display: "grid",
@@ -517,17 +533,101 @@ export default function LeaderboardPage() {
             ) : leaderboard.length === 0 ? (
               <EmptyState colors={colors} />
             ) : (
-              leaderboard.map((row, i) => (
-                <LeaderRow
-                  key={row.address}
-                  rank={i}
-                  {...row}
-                  colors={colors}
-                  onClick={() =>
-                    setSelectedAddress(row.address as `0x${string}`)
-                  }
-                />
-              ))
+              leaderboard.map((row, i) =>
+                isMobile ? (
+                  <div
+                    key={row.address}
+                    onClick={() =>
+                      setSelectedAddress(row.address as `0x${string}`)
+                    }
+                    style={{
+                      padding: "16px",
+                      borderBottom:
+                        i < leaderboard.length - 1
+                          ? `1px solid ${colors.cardBorder}`
+                          : "none",
+                    }}
+                  >
+                    {/* top row: rank + odds */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <Medal rank={i} />
+
+                      <span
+                        style={{
+                          fontWeight: 800,
+                          color: colors.primary,
+                        }}
+                      >
+                        {row.oddsPercent > 0
+                          ? `${row.oddsPercent.toFixed(2)}%`
+                          : "—"}
+                      </span>
+                    </div>
+
+                    {/* address */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <img src="/profile-white.svg" width={28} height={28} />
+
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontWeight: 700,
+                          color: colors.textPrimary,
+                        }}
+                      >
+                        {shorten(row.address)}
+                      </span>
+                    </div>
+
+                    {/* stats row */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      <span style={{ color: colors.textSecondary }}>
+                        Wins:{" "}
+                        <b style={{ color: colors.reward }}>
+                          {row.wins || "—"}
+                        </b>
+                      </span>
+
+                      <span style={{ color: colors.textSecondary }}>
+                        MEZO:{" "}
+                        <b style={{ color: colors.reward }}>
+                          {row.wins > 0 ? formatToken(row.totalMezo) : "—"}
+                        </b>
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <LeaderRow
+                    key={row.address}
+                    rank={i}
+                    {...row}
+                    colors={colors}
+                    theme={theme}
+                    onClick={() =>
+                      setSelectedAddress(row.address as `0x${string}`)
+                    }
+                  />
+                ),
+              )
             )}
           </div>
 
