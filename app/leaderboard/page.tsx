@@ -8,6 +8,8 @@ import { useParticipants } from "@/hooks/useParticipants";
 import { formatToken } from "@/lib/format";
 import { PlayerModal } from "@/components/PlayerModal";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/PaginationControls";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function shorten(addr: string) {
@@ -346,6 +348,9 @@ export default function LeaderboardPage() {
   const totalPrizes = draws.reduce((a, d) => a + d.prizeNative, BigInt(0));
   const isMobile = useIsMobile();
 
+  const { paginated, page, totalPages, next, prev, reset } =
+    usePagination(leaderboard);
+
   return (
     <>
       <main
@@ -533,8 +538,9 @@ export default function LeaderboardPage() {
             ) : leaderboard.length === 0 ? (
               <EmptyState colors={colors} />
             ) : (
-              leaderboard.map((row, i) =>
-                isMobile ? (
+              paginated.map((row, i) => {
+                const globalIndex = page * 20 + i;
+                return isMobile ? (
                   <div
                     key={row.address}
                     onClick={() =>
@@ -543,7 +549,7 @@ export default function LeaderboardPage() {
                     style={{
                       padding: "16px",
                       borderBottom:
-                        i < leaderboard.length - 1
+                        i < paginated.length - 1
                           ? `1px solid ${colors.cardBorder}`
                           : "none",
                     }}
@@ -556,7 +562,7 @@ export default function LeaderboardPage() {
                         marginBottom: "10px",
                       }}
                     >
-                      <Medal rank={i} />
+                      <Medal rank={globalIndex} />
 
                       <span
                         style={{
@@ -618,7 +624,7 @@ export default function LeaderboardPage() {
                 ) : (
                   <LeaderRow
                     key={row.address}
-                    rank={i}
+                    rank={globalIndex}
                     {...row}
                     colors={colors}
                     theme={theme}
@@ -626,8 +632,8 @@ export default function LeaderboardPage() {
                       setSelectedAddress(row.address as `0x${string}`)
                     }
                   />
-                ),
-              )
+                );
+              })
             )}
           </div>
 

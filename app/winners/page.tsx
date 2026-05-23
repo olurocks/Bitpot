@@ -7,6 +7,8 @@ import { formatToken } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { PlayerModal } from "@/components/PlayerModal";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/PaginationControls";
 
 function shorten(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -67,6 +69,8 @@ export default function WinnersPage() {
 
   // most recent first
   const sorted = [...draws].reverse();
+
+  const { paginated, page, totalPages, next, prev } = usePagination(sorted, 10);
 
   return (
     <main
@@ -232,7 +236,7 @@ export default function WinnersPage() {
           ) : draws.length === 0 ? (
             <EmptyState colors={colors} />
           ) : (
-            sorted.map((draw, i) =>
+            paginated.map((draw, i) =>
               isMobile ? (
                 <div
                   key={draw.drawId.toString()}
@@ -240,7 +244,7 @@ export default function WinnersPage() {
                   style={{
                     padding: "16px",
                     borderBottom:
-                      i < sorted.length - 1
+                      i < paginated.length - 1
                         ? `1px solid ${colors.cardBorder}`
                         : "none",
                   }}
@@ -324,7 +328,7 @@ export default function WinnersPage() {
                     gridTemplateColumns: "80px 1fr 160px 100px 180px",
                     padding: isMobile ? "16px 18px" : "18px 24px",
                     borderBottom:
-                      i < sorted.length - 1
+                      i < paginated.length - 1
                         ? `1px solid ${colors.cardBorder}`
                         : "none",
                     alignItems: "center",
@@ -442,6 +446,13 @@ export default function WinnersPage() {
               ),
             )
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onNext={next}
+            onPrev={prev}
+            colors={colors}
+          />
         </div>
       </div>
       <PlayerModal

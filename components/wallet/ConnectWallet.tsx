@@ -44,8 +44,7 @@ export function ConnectWallet() {
           {shorten(address)}
         </button>
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-            <div className="px-4 py-3 border-b border-gray-100">
+<div className="absolute right-0 mt-2 w-56 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5" style={{ zIndex: 200 }}>            <div className="px-4 py-3 border-b border-gray-100">
               <p className="text-sm font-medium text-gray-900">
                 Connected Wallet
               </p>
