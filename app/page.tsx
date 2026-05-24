@@ -5,7 +5,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { useAllTimeStats } from "@/hooks/useAllTimeStats";
 import { formatToken } from "@/lib/format";
-import {  useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 function AnimatedNumber({
@@ -166,6 +166,236 @@ function HowItWorks({ colors }: { colors: any }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function GettingStarted({
+  colors,
+  isMobile,
+}: {
+  colors: any;
+  isMobile: boolean;
+}) {
+  const [tab, setTab] = useState<"deposit" | "withdraw">("deposit");
+
+  type Step = {
+    step: number;
+    title: string;
+    desc: string;
+    link?: { label: string; href: string };
+  };
+
+  const depositSteps: Step[] = [
+    {
+      step: 1,
+      title: "Get MUSD",
+      desc: "Follow Mezo's official guide to mint MUSD using your Bitcoin as collateral.",
+      link: {
+        label: "Mezo MUSD Guide",
+        href: "https://mezo.org/docs/users/musd/mint-musd/",
+      },
+    },
+    {
+      step: 2,
+      title: "Connect Your Wallet",
+      desc: "Click 'Connect Wallet' in the top right and connect with MetaMask or any injected wallet on Mezo Testnet.",
+    },
+    {
+      step: 3,
+      title: "Go to the Pool",
+      desc: "Navigate to the Pool page and click 'Join Pool'.",
+    },
+    {
+      step: 4,
+      title: "Approve MUSD",
+      desc: "On your first deposit, you'll be asked to approve BitPot to spend your MUSD. Confirm this in your wallet.",
+    },
+    {
+      step: 5,
+      title: "Deposit & Wait",
+      desc: "Enter your MUSD amount and confirm the deposit. Your odds improve the longer you stay in the pool.",
+    },
+  ];
+
+  const withdrawSteps: Step[] = [
+    {
+      step: 1,
+      title: "Go to the Pool",
+      desc: "Navigate to the Pool page and click 'Exit Pool'.",
+    },
+    {
+      step: 2,
+      title: "Enter Amount",
+      desc: "Enter how much MUSD you want to withdraw, or hit MAX to withdraw everything.",
+    },
+    {
+      step: 3,
+      title: "Confirm Withdrawal",
+      desc: "Confirm the transaction in your wallet. Your MUSD is returned to your wallet immediately.",
+    },
+    {
+      step: 4,
+      title: "Note on Timing",
+      desc: "Withdrawing during an active draw is not possible — wait for the draw to complete first. Withdrawing resets your time-weighted odds.",
+    },
+  ];
+
+  const steps = tab === "deposit" ? depositSteps : withdrawSteps;
+
+  const tabBtn = (t: "deposit" | "withdraw", label: string) => (
+    <button
+      onClick={() => setTab(t)}
+      style={{
+        padding: "10px 28px",
+        borderRadius: "999px",
+        border: "none",
+        fontWeight: 700,
+        fontSize: "0.95rem",
+        cursor: "pointer",
+        backgroundColor: tab === t ? colors.primary : "transparent",
+        color: tab === t ? colors.white : colors.textSecondary,
+        transition: "all 0.2s",
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <section
+      style={{
+        maxWidth: "1100px",
+        margin: "0 auto",
+        padding: isMobile ? "56px 16px" : "80px 24px",
+      }}
+    >
+      {/* header */}
+      <div style={{ textAlign: "center", marginBottom: "40px" }}>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            color: colors.primary,
+            textTransform: "uppercase",
+          }}
+        >
+          Get started
+        </span>
+        <h2
+          style={{
+            fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            color: colors.textPrimary,
+            margin: "10px 0 24px",
+          }}
+        >
+          Getting Started
+        </h2>
+
+        {/* tab toggle */}
+        <div
+          style={{
+            display: "inline-flex",
+            backgroundColor: colors.surface,
+            border: `1px solid ${colors.cardBorder}`,
+            borderRadius: "999px",
+            padding: "4px",
+            gap: "4px",
+          }}
+        >
+          {tabBtn("deposit", "Depositing")}
+          {tabBtn("withdraw", "Withdrawing")}
+        </div>
+      </div>
+
+      {/* steps */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          maxWidth: "680px",
+          margin: "0 auto",
+        }}
+      >
+        {steps.map((s) => (
+          <div
+            key={s.step}
+            style={{
+              display: "flex",
+              gap: "20px",
+              alignItems: "flex-start",
+              backgroundColor: colors.surface,
+              border: `1px solid ${colors.cardBorder}`,
+              borderRadius: "20px",
+              padding: "20px 24px",
+            }}
+          >
+            {/* step number */}
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                backgroundColor: `${colors.primary}22`,
+                color: colors.primary,
+                fontWeight: 800,
+                fontSize: "0.95rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {s.step}
+            </div>
+
+            {/* content */}
+            <div>
+              <p
+                style={{
+                  margin: "0 0 4px",
+                  fontWeight: 700,
+                  fontSize: "1rem",
+                  color: colors.textPrimary,
+                }}
+              >
+                {s.title}
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "0.88rem",
+                  color: colors.textSecondary,
+                  lineHeight: 1.6,
+                }}
+              >
+                {s.desc}
+              </p>
+              {s.link && (
+                <a
+                  href={s.link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    marginTop: "8px",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    color: colors.primary,
+                    textDecoration: "none",
+                  }}
+                >
+                  {s.link.label}
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -333,7 +563,6 @@ export default function Home() {
   const { theme } = useTheme();
   const colors = themeColors[theme];
   const isMobile = useIsMobile();
-
 
   const {
     allTimeDepositWad,
@@ -586,6 +815,8 @@ export default function Home() {
         </div>
         <HowItWorks colors={colors} />
       </section>
+
+      <GettingStarted colors={colors} isMobile={isMobile} />
 
       {/* ── WHY MEZO ─────────────────────────────────────────────────────── */}
       <section
