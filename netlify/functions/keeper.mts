@@ -7,7 +7,7 @@ import { Addresses } from "../../config/contracts";
 import crypto from "crypto";
 
 const account = privateKeyToAccount(
-  process.env.DRAWER_PRIVATE_KEY as `0x${string}`
+  process.env.DRAWER_PRIVATE_KEY as `0x${string}`,
 );
 
 const publicClient = createPublicClient({
@@ -38,18 +38,30 @@ export default async function handler() {
 
     const now = Math.floor(Date.now() / 1000);
 
-    // Try request-draw
     if (!drawPending && now >= Number(nextDrawTime)) {
-      const hash = await walletClient.writeContract({
+      const requestHash = await walletClient.writeContract({
         address: Addresses.prizePool,
         abi: prizePoolAbi,
         functionName: "requestDraw",
       });
-      console.log("requestDraw tx:", hash);
+      console.log("requestDraw tx:", requestHash);
+
+      // Wait for the tx to be mined before fulfilling
+      await publicClient.waitForTransactionReceipt({ hash: requestHash });
+
+      // Fulfill in the same tick
+      const seed = toHex(crypto.randomBytes(32));
+      const fulfillHash = await walletClient.writeContract({
+        address: Addresses.prizePool,
+        abi: prizePoolAbi,
+        functionName: "fulfillDraw",
+        args: [seed],
+      });
+      console.log("fulfillDraw tx:", fulfillHash);
       return;
     }
 
-    // Try fulfill-draw
+    // Draw was already pending from a previous failed run — just fulfill it
     if (drawPending) {
       const seed = toHex(crypto.randomBytes(32));
       const hash = await walletClient.writeContract({
