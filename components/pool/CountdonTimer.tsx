@@ -146,24 +146,29 @@ export function CountdownTimer() {
     return () => clearInterval(id);
   }, [isLoading]);
 
-  useEffect(() => {
-    const wasPending = prevPending.current;
-    const isNowPending = !!drawPending;
+useEffect(() => {
+  const wasPending = prevPending.current;
+  const isNowPending = !!drawPending;
 
-    if (
-      wasPending === true &&
-      isNowPending === false &&
-      draws.length > prevDrawCount.current
-    ) {
-      const latest = draws[draws.length - 1];
-      setJustWon({ winner: latest.winner, prize: latest.prizeNative });
-      const t = setTimeout(() => setJustWon(null), 10000);
-      return () => clearTimeout(t);
-    }
-
-    prevPending.current = isNowPending;
+  if (isNowPending && !wasPending) {
+    // Draw just started — snapshot the current draw count
     prevDrawCount.current = draws.length;
-  }, [drawPending, draws]);
+  }
+
+  if (
+    wasPending === true &&
+    isNowPending === false &&
+    draws.length > prevDrawCount.current
+  ) {
+    const latest = draws[draws.length - 1];
+    setJustWon({ winner: latest.winner, prize: latest.prizeNative });
+    const t = setTimeout(() => setJustWon(null), 10000);
+    prevPending.current = isNowPending;
+    return () => clearTimeout(t);
+  }
+
+  prevPending.current = isNowPending;
+}, [drawPending, draws]);
 
   const drawStatus = drawPending
     ? "⏳ Draw Requested — Awaiting Fulfillment"
@@ -328,6 +333,69 @@ export function CountdownTimer() {
           </div>
         </div>
       )}
+
+      {/* Last winner display */}
+      {draws.length > 0 &&
+        !justWon &&
+        (() => {
+          const latest = draws[draws.length - 1];
+          return (
+            <div
+              style={{
+                width: "100%",
+                backgroundColor: `${colors.reward}10`,
+                border: `1px solid ${colors.reward}30`,
+                borderRadius: "16px",
+                padding: "14px 20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <span style={{ fontSize: "1.2rem" }}>🏆</span>
+                <div>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      color: colors.textTertiary,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Last winner · Draw #{latest.drawId.toString()}
+                  </p>
+                  <p
+                    style={{
+                      margin: "2px 0 0",
+                      fontSize: "0.85rem",
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    <span style={{ fontFamily: "monospace", fontWeight: 700 }}>
+                      {`${latest.winner.slice(0, 6)}...${latest.winner.slice(-4)}`}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <span
+                style={{
+                  fontWeight: 800,
+                  fontSize: "0.95rem",
+                  color: colors.reward,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {formatToken(latest.prizeNative)} MEZO
+              </span>
+            </div>
+          );
+        })()}
 
       {/* Deposit modal */}
       {showDeposit && (
