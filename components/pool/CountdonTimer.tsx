@@ -4,19 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useTheme } from "../ThemeProvider";
 import { themeColors } from "@/constants";
 import { contractConfig } from "@/config/contracts";
-import {
-  useReadContract,
-  useWriteContract,
-  useAccount,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useReadContract, useAccount } from "wagmi";
 import { DepositForm } from "./DepositForm";
 import { formatToken } from "@/lib/format";
-import { usePendingPrize } from "@/hooks/usePendingPrize";
-import { usePoolStats } from "@/hooks/usePoolStats";
-import { formatUnits } from "viem";
 import { WithdrawForm } from "./WithdrawForm";
 import { RequestDrawButton } from "./RequestDraw";
+import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 
 type TimerProps = {
   colors: any;
@@ -25,48 +18,78 @@ type TimerProps = {
   labelSize?: string;
   valueSize?: string;
 };
+
+// ─── Not connected state ──────────────────────────────────────────────────────
+function NotConnectedPanel({ colors }: { colors: any }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "20px",
+        padding: "48px 24px",
+        textAlign: "center",
+        width: "100%",
+        maxWidth: "400px",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <h2
+          style={{
+            color: colors.textPrimary,
+            fontWeight: 800,
+            fontSize: "1.3rem",
+            margin: 0,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Connect to Join or Exit
+        </h2>
+        <p
+          style={{
+            color: colors.textSecondary,
+            fontSize: "0.88rem",
+            lineHeight: 1.6,
+            margin: 0,
+            maxWidth: "280px",
+          }}
+        >
+          Connect your wallet to deposit MUSD into the prize pool or withdraw
+          your existing position.
+        </p>
+      </div>
+      <ConnectWallet />
+    </div>
+  );
+}
+
 export function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [drawReady, setDrawReady] = useState(false);
-  const [isDrawTime, setIsDrawTime] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
 
-  const [lastDrawTime, setLastDrawTime] = useState<bigint | null>(null);
-
   const theme = useTheme();
   const colors = themeColors[theme.theme];
 
-  const { data: nextDrawTimestamp, refetch: refetchNextDraw } = useReadContract(
-    {
-      ...contractConfig,
-      functionName: "nextDrawTime",
-      query: { refetchInterval: 10000 },
-    },
-  );
+  const { isConnected } = useAccount();
 
-  const { data: drawPending, refetch: refetchDrawPending } = useReadContract({
+  const { data: nextDrawTimestamp } = useReadContract({
+    ...contractConfig,
+    functionName: "nextDrawTime",
+    query: { refetchInterval: 10000 },
+  });
+
+  const { data: drawPending } = useReadContract({
     ...contractConfig,
     functionName: "drawPending",
     query: { refetchInterval: 5000 },
   });
 
-  // const toBigInt = (v: any): bigint | null => {
-  //   if (v === null || v === undefined) return null;
-  //   if (typeof v === "bigint") return v;
-  //   if (typeof v === "number") return BigInt(Math.floor(v));
-  //   try {
-  //     // ethers BigNumber or numeric string
-  //     return BigInt(String((v as any).toString ? (v as any).toString() : v));
-  //   } catch (_) {
-  //     return null;
-  //   }
-  // };
-
   const poolLocked = !!drawPending;
-
-  //request draw when drawPending
 
   const pad = (v: number) => String(v).padStart(2, "0");
 
@@ -79,7 +102,6 @@ export function CountdownTimer() {
     return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
   };
 
-  // Recompute countdown from nextDrawTime
   const recompute = useCallback(() => {
     if (nextDrawTimestamp == null) return;
     const next = Number(nextDrawTimestamp);
@@ -98,9 +120,9 @@ export function CountdownTimer() {
   useEffect(() => {
     recompute();
   }, [recompute]);
+
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
-  // Tick every second
   useEffect(() => {
     if (isLoading) return;
     const id = setInterval(() => {
@@ -129,10 +151,12 @@ export function CountdownTimer() {
         alignItems: "center",
         display: "flex",
         flexDirection: "column",
-        gap: "5px",
+        gap: "16px",
         textAlign: "center",
+        width: "100%",
       }}
     >
+      {/* Countdown always visible */}
       <TimeElement
         label="Next Draw In"
         value={drawReady ? "DRAW READY" : formatDuration(timeLeft)}
@@ -148,6 +172,7 @@ export function CountdownTimer() {
               : "7rem"
         }
       />
+
       {drawStatus && (
         <span
           style={{
@@ -164,53 +189,58 @@ export function CountdownTimer() {
           {drawStatus}
         </span>
       )}
-      {/* Action buttons */}
-      <div
-        style={{
-          display: "grid",
-          gap: "12px",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          marginTop: "8px",
-        }}
-      >
-        <button
-          disabled={poolLocked}
-          style={btnStyle(colors.secondary, colors.background)}
-          onClick={() => setShowDeposit(true)}
-        >
-          Join Pool
-        </button>
-        <button
-          disabled={poolLocked}
-          style={btnStyle(colors.primary, colors.textPrimary)}
-          onClick={() => setShowWithdraw(true)}
-        >
-          Exit Pool
-        </button>
+
+      {/* Action area — changes based on connection state */}
+      {!isConnected ? (
+        <NotConnectedPanel colors={colors} />
+      ) : (
         <div
           style={{
-            gridColumn: "1 / -1",
-            display: "flex",
-            justifyContent: "center",
+            display: "grid",
+            gap: "12px",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            marginTop: "8px",
+            width: "100%",
           }}
         >
-          <RequestDrawButton colors={colors} />
-        </div>{" "}
-      </div>
+          <button
+            disabled={poolLocked}
+            style={btnStyle(colors.secondary, colors.background)}
+            onClick={() => setShowDeposit(true)}
+          >
+            Join Pool
+          </button>
+          <button
+            disabled={poolLocked}
+            style={btnStyle(colors.primary, colors.textPrimary)}
+            onClick={() => setShowWithdraw(true)}
+          >
+            Exit Pool
+          </button>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <RequestDrawButton colors={colors} />
+          </div>
+        </div>
+      )}
+
+      {/* Deposit modal */}
       {showDeposit && (
         <div
           onClick={() => setShowDeposit(false)}
           style={{
             position: "fixed",
             inset: 0,
-
             backgroundColor: "rgba(0,0,0,0.45)",
             backdropFilter: "blur(8px)",
-
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-
             zIndex: 999,
           }}
         >
@@ -219,10 +249,8 @@ export function CountdownTimer() {
             style={{
               width: "100%",
               maxWidth: "480px",
-
               backgroundColor: colors.surface,
               border: `1px solid ${colors.cardBorder}`,
-
               padding: isMobile ? "20px" : "32px",
               borderRadius: isMobile ? "22px" : "32px",
               boxShadow:
@@ -232,24 +260,18 @@ export function CountdownTimer() {
             }}
           >
             <DepositForm />
-
             <button
               onClick={() => setShowDeposit(false)}
               style={{
                 marginTop: "20px",
                 width: "100%",
-
                 backgroundColor: colors.secondary,
                 color: colors.white,
-
                 border: "none",
                 borderRadius: "18px",
-
                 padding: "14px",
-
                 fontWeight: 700,
                 fontSize: "1rem",
-
                 cursor: "pointer",
               }}
             >
@@ -258,6 +280,8 @@ export function CountdownTimer() {
           </div>
         </div>
       )}
+
+      {/* Withdraw modal */}
       {showWithdraw && (
         <div
           onClick={() => setShowWithdraw(false)}
@@ -323,17 +347,14 @@ export function TimeElement({
     <div
       style={{
         borderRadius: "24px",
-
         padding: "20px",
         display: "flex",
         justifyContent: "center",
         flexDirection: "column",
         gap: "10px",
-
         transition: "all 0.2s ease",
       }}
     >
-      {/* LABEL */}
       <span
         style={{
           fontSize: labelSize,
@@ -344,8 +365,6 @@ export function TimeElement({
       >
         {label}
       </span>
-
-      {/* VALUE */}
       <span
         style={{
           fontSize: valueSize,
@@ -374,67 +393,4 @@ export function btnStyle(bg: string, color: string, disabled = false) {
     opacity: disabled ? 0.6 : 1,
     transition: "opacity 0.2s",
   };
-}
-
-function Modal({
-  onClose,
-  colors,
-  theme,
-  children,
-}: {
-  onClose: () => void;
-  colors: any;
-  theme: any;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.45)",
-        backdropFilter: "blur(8px)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 999,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: "480px",
-          backgroundColor: colors.surface,
-          border: `1px solid ${colors.cardBorder}`,
-          borderRadius: "32px",
-          padding: "32px",
-          boxShadow:
-            theme.theme === "dark"
-              ? "0 20px 60px rgba(0,0,0,0.45)"
-              : "0 20px 60px rgba(2,27,82,0.12)",
-        }}
-      >
-        {children}
-        <button
-          onClick={onClose}
-          style={{
-            marginTop: "20px",
-            width: "100%",
-            backgroundColor: colors.secondary,
-            color: colors.white,
-            border: "none",
-            borderRadius: "18px",
-            padding: "14px",
-            fontWeight: 700,
-            fontSize: "1rem",
-            cursor: "pointer",
-          }}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
 }

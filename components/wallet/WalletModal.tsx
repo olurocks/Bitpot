@@ -3,36 +3,65 @@
 import { useConnect } from "wagmi";
 import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { WalletIcon } from "@web3icons/react/dynamic";
 
-const WALLET_KEYS: Record<string, string> = {
-  metaMask: "metamask",
-  metaMaskSDK: "metamask",
+// Maps wagmi connector id → web3icons key
+const WALLET_ICON_KEYS: Record<string, string> = {
+  "app.phantom": "phantom",
+  "app.keplr": "keplr",
+  "app.hashpack": "hashpack",
+  "com.okex.wallet": "okx-wallet",
+  "com.templewallet": "temple-wallet",
+  "app.backpack": "backpack",
   walletConnect: "walletconnect",
   coinbaseWalletSDK: "coinbase-wallet",
-  injected: "wallet",
 };
+
+function getIconKey(id: string, name: string): string {
+  return (
+    WALLET_ICON_KEYS[id] ??
+    name.toLowerCase().replace(/\s+/g, "-")
+  );
+}
 
 export function WalletModal({ onClose }: { onClose: () => void }) {
   const { connectors, connect, isPending } = useConnect();
   const { theme } = useTheme();
   const colors = themeColors[theme];
+  const [connectingId, setConnectingId] = useState<string | null>(null);
 
-  // Escape key closes modal
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  // With injected() wagmi uses EIP-6963 to discover all injected wallets
+  // (MetaMask, OKX, Phantom, etc.) as separate entries — dedupe by name
   const unique = connectors.filter(
     (c, i, arr) => arr.findIndex((x) => x.name === c.name) === i,
   );
+
+  const handleConnect = (connector: (typeof connectors)[number]) => {
+    setConnectingId(connector.id);
+    connect(
+      { connector },
+      {
+        onSuccess: () => {
+          setConnectingId(null);
+          onClose();
+        },
+        onError: (err) => {
+          console.error("connect error", err);
+          setConnectingId(null);
+        },
+      },
+    );
+  };
 
   return createPortal(
     <div
@@ -83,7 +112,6 @@ export function WalletModal({ onClose }: { onClose: () => void }) {
           >
             Connect Wallet
           </span>
-
           <button
             onClick={onClose}
             style={{
@@ -113,18 +141,17 @@ export function WalletModal({ onClose }: { onClose: () => void }) {
           }}
         >
           {unique.map((connector) => {
-            const walletKey =
-              WALLET_KEYS[connector.id] ??
-              connector.name.toLowerCase().replace(/\s+/g, "-");
+            const isConnecting = connectingId === connector.id;
+            const iconKey = getIconKey(connector.id, connector.name);
+            // EIP-6963 connectors expose their own icon as a data URI
+            const iconDataUri =
+              typeof connector.icon === "string" ? connector.icon : null;
 
             return (
               <button
                 key={connector.id}
-                onClick={() => {
-                  connect({ connector });
-                  onClose();
-                }}
-                disabled={isPending}
+                onClick={() => handleConnect(connector)}
+                disabled={!!connectingId}
                 style={{
                   display: "flex",
                   flexDirection: "column",
@@ -133,32 +160,54 @@ export function WalletModal({ onClose }: { onClose: () => void }) {
                   gap: "12px",
                   padding: "24px 16px",
                   backgroundColor: colors.background,
-                  border: `1px solid ${colors.cardBorder}`,
+                  border: `1px solid ${isConnecting ? colors.primary : colors.cardBorder}`,
                   borderRadius: "20px",
-                  cursor: isPending ? "not-allowed" : "pointer",
-                  transition: "border-color 0.15s",
+                  cursor: connectingId ? "not-allowed" : "pointer",
+                  transition: "border-color 0.15s, opacity 0.15s",
+                  opacity: connectingId && !isConnecting ? 0.4 : 1,
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.borderColor = colors.primary)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.borderColor = colors.cardBorder)
-                }
+                onMouseEnter={(e) => {
+                  if (!connectingId)
+                    e.currentTarget.style.borderColor = colors.primary;
+                }}
+                onMouseLeave={(e) => {
+                  if (!isConnecting)
+                    e.currentTarget.style.borderColor = colors.cardBorder;
+                }}
               >
-                <WalletIcon
-                  name={WALLET_KEYS[connector.id] ?? connector.name}
-                  size={48}
-                  variant="branded"
-                />
+                {isConnecting ? (
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      border: `3px solid ${colors.cardBorder}`,
+                      borderTopColor: colors.primary,
+                      animation: "spin 0.8s linear infinite",
+                    }}
+                  />
+                ) : iconDataUri ? (
+                  // Use the connector's own icon (covers MetaMask via EIP-6963)
+                  <img
+                    src={iconDataUri}
+                    alt={connector.name}
+                    width={48}
+                    height={48}
+                    style={{ borderRadius: "10px", objectFit: "contain" }}
+                  />
+                ) : (
+                  <WalletIcon name={iconKey} size={48} variant="branded" />
+                )}
 
                 <span
                   style={{
                     fontWeight: 700,
                     fontSize: "0.88rem",
                     color: colors.textPrimary,
+                    textAlign: "center",
                   }}
                 >
-                  {connector.name}
+                  {isConnecting ? "Connecting…" : connector.name}
                 </span>
               </button>
             );
@@ -176,6 +225,10 @@ export function WalletModal({ onClose }: { onClose: () => void }) {
           By connecting, you agree to BitPot&apos;s terms of use.
         </p>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>,
     document.body,
   );
