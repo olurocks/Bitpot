@@ -193,6 +193,37 @@ export function CountdownTimer() {
       {/* Action area — changes based on connection state */}
       {!isConnected ? (
         <NotConnectedPanel colors={colors} />
+      ) : poolLocked ? (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "16px 24px",
+            backgroundColor: `${colors.accent}14`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: "16px",
+            width: "100%",
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 700,
+              color: colors.accent,
+              fontSize: "0.9rem",
+            }}
+          >
+            ⏳ Selecting winner…
+          </p>
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: "0.78rem",
+              color: colors.textSecondary,
+            }}
+          >
+            Deposits and withdrawals are paused during the draw.
+          </p>
+        </div>
       ) : (
         <div
           style={{
@@ -204,14 +235,12 @@ export function CountdownTimer() {
           }}
         >
           <button
-            disabled={poolLocked}
             style={btnStyle(colors.secondary, colors.background)}
             onClick={() => setShowDeposit(true)}
           >
             Join Pool
           </button>
           <button
-            disabled={poolLocked}
             style={btnStyle(colors.primary, colors.textPrimary)}
             onClick={() => setShowWithdraw(true)}
           >

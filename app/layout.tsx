@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { PageTransition } from "@/components/PageTransition";
 import { Footer } from "@/components/layout/Footer";
 import { WrongNetworkBanner } from "@/components/WrongNetworkBanner";
+import { WinnerToast } from "@/components/WinnerToast";
 
 export const metadata: Metadata = {
   title: "BitPot",
@@ -24,6 +25,7 @@ export default function RootLayout({
           <Providers>
             <Header />
             <WrongNetworkBanner />
+            <WinnerToast />
             <PageTransition>
               <main style={{ paddingTop: "70px" }}>{children}</main>
               <Footer />
