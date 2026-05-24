@@ -1,7 +1,6 @@
 import cron from "node-cron";
 
-const BASE_URL = "http://localhost:3000";
-
+const BASE_URL = "http://bitpot.netlify.app";
 async function hit(path: string) {
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
@@ -10,17 +9,9 @@ async function hit(path: string) {
 
     const data = await res.json();
 
-    console.log(
-      `[${new Date().toISOString()}]`,
-      path,
-      data,
-    );
+    console.log(`[${new Date().toISOString()}]`, path, data);
   } catch (err) {
-    console.error(
-      `[${new Date().toISOString()}]`,
-      path,
-      err,
-    );
+    console.error(`[${new Date().toISOString()}]`, path, err);
   }
 }
 

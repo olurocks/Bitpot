@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTheme } from "../ThemeProvider";
 import { themeColors } from "@/constants";
 import { contractConfig } from "@/config/contracts";
@@ -10,6 +10,7 @@ import { formatToken } from "@/lib/format";
 import { WithdrawForm } from "./WithdrawForm";
 import { RequestDrawButton } from "./RequestDraw";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
+import { useDrawHistory } from "@/hooks/useDrawHistory";
 
 type TimerProps = {
   colors: any;
@@ -71,6 +72,13 @@ export function CountdownTimer() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const { draws } = useDrawHistory();
+  const prevPending = useRef<boolean | undefined>(undefined);
+  const prevDrawCount = useRef<number>(0);
+  const [justWon, setJustWon] = useState<{
+    winner: string;
+    prize: bigint;
+  } | null>(null);
 
   const theme = useTheme();
   const colors = themeColors[theme.theme];
@@ -138,6 +146,25 @@ export function CountdownTimer() {
     return () => clearInterval(id);
   }, [isLoading]);
 
+  useEffect(() => {
+    const wasPending = prevPending.current;
+    const isNowPending = !!drawPending;
+
+    if (
+      wasPending === true &&
+      isNowPending === false &&
+      draws.length > prevDrawCount.current
+    ) {
+      const latest = draws[draws.length - 1];
+      setJustWon({ winner: latest.winner, prize: latest.prizeNative });
+      const t = setTimeout(() => setJustWon(null), 10000);
+      return () => clearTimeout(t);
+    }
+
+    prevPending.current = isNowPending;
+    prevDrawCount.current = draws.length;
+  }, [drawPending, draws]);
+
   const drawStatus = drawPending
     ? "⏳ Draw Requested — Awaiting Fulfillment"
     : drawReady
@@ -173,7 +200,51 @@ export function CountdownTimer() {
         }
       />
 
-      {drawStatus && (
+      {/* Winner banner — replaces drawStatus span when a winner was just picked */}
+      {justWon ? (
+        <div
+          style={{
+            width: "100%",
+            backgroundColor: `${colors.reward}18`,
+            border: `1px solid ${colors.reward}44`,
+            borderRadius: "16px",
+            padding: "16px 20px",
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 800,
+              fontSize: "1rem",
+              color: colors.reward,
+            }}
+          >
+            🏆 Winner selected!
+          </p>
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: "0.82rem",
+              color: colors.textSecondary,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "monospace",
+                color: colors.textPrimary,
+                fontWeight: 700,
+              }}
+            >
+              {`${justWon.winner.slice(0, 6)}...${justWon.winner.slice(-4)}`}
+            </span>
+            {" won "}
+            <span style={{ color: colors.reward, fontWeight: 700 }}>
+              {formatToken(justWon.prize)} MEZO
+            </span>
+          </p>
+        </div>
+      ) : drawStatus ? (
         <span
           style={{
             fontSize: "0.9rem",
@@ -188,6 +259,74 @@ export function CountdownTimer() {
         >
           {drawStatus}
         </span>
+      ) : null}
+
+      {/* Action area */}
+      {!isConnected ? (
+        <NotConnectedPanel colors={colors} />
+      ) : poolLocked ? (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "16px 24px",
+            backgroundColor: `${colors.accent}14`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: "16px",
+            width: "100%",
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 700,
+              color: colors.accent,
+              fontSize: "0.9rem",
+            }}
+          >
+            ⏳ Selecting winner…
+          </p>
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: "0.78rem",
+              color: colors.textSecondary,
+            }}
+          >
+            Deposits and withdrawals are paused during the draw.
+          </p>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gap: "12px",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            marginTop: "8px",
+            width: "100%",
+          }}
+        >
+          <button
+            style={btnStyle(colors.secondary, colors.background)}
+            onClick={() => setShowDeposit(true)}
+          >
+            Join Pool
+          </button>
+          <button
+            style={btnStyle(colors.primary, colors.textPrimary)}
+            onClick={() => setShowWithdraw(true)}
+          >
+            Exit Pool
+          </button>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <RequestDrawButton colors={colors} />
+          </div>
+        </div>
       )}
 
       {/* Action area — changes based on connection state */}
