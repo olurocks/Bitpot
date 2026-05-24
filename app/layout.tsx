@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PageTransition } from "@/components/PageTransition";
 import { Footer } from "@/components/layout/Footer";
+import { WrongNetworkBanner } from "@/components/WrongNetworkBanner";
 
 export const metadata: Metadata = {
   title: "BitPot",
@@ -22,6 +23,7 @@ export default function RootLayout({
         <body className="min-h-screen bg-[#f8fffb] text-slate-950">
           <Providers>
             <Header />
+            <WrongNetworkBanner />
             <PageTransition>
               <main style={{ paddingTop: "70px" }}>{children}</main>
               <Footer />

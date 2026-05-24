@@ -11,6 +11,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { prizePoolAbi } from "@/abi/PrizePool";
 import { erc20Abi } from "viem";
 import { Addresses } from "@/config/contracts";
+import { mezoTestnet } from "@/config/chains";
 
 type DepositStatus =
   | "idle"
@@ -24,7 +25,9 @@ export function useDeposit(poolAddress: Address) {
   const pendingAmount = useRef<bigint | null>(null);
   const [status, setStatus] = useState<DepositStatus>("idle");
 
-  const { address } = useAccount();
+  // Use chainId from useAccount — reflects the wallet's actual chain
+  const { address, chainId: walletChainId } = useAccount();
+  const isCorrectChain = walletChainId === mezoTestnet.id;
 
   const allowanceResult = useReadContract({
     abi: erc20Abi,
@@ -37,7 +40,6 @@ export function useDeposit(poolAddress: Address) {
     query: { refetchInterval: 5000 },
   });
 
-  // Approve
   const {
     writeContract: writeApprove,
     data: approveHash,
@@ -48,7 +50,6 @@ export function useDeposit(poolAddress: Address) {
   const { isSuccess: approveSuccess, isError: approveReceiptError } =
     useWaitForTransactionReceipt({ hash: approveHash });
 
-  // Deposit
   const {
     writeContract: writeDeposit,
     data: depositHash,
@@ -60,7 +61,6 @@ export function useDeposit(poolAddress: Address) {
     hash: depositHash,
   });
 
-  // Initiate deposit flow
   const MAX_UINT256 = (BigInt(1) << BigInt(256)) - BigInt(1);
 
   const toBigInt = (value: unknown): bigint | null => {
@@ -76,6 +76,13 @@ export function useDeposit(poolAddress: Address) {
 
   const deposit = useCallback(
     (amount: string) => {
+      // Hard guard — never send a transaction on the wrong chain
+      if (!isCorrectChain) {
+        console.warn("useDeposit: wrong chain, aborting");
+        setStatus("error");
+        return;
+      }
+
       if (isApprovePending || isDepositPending) return;
 
       const parsed = parseUnits(amount, 18);
@@ -103,6 +110,7 @@ export function useDeposit(poolAddress: Address) {
       });
     },
     [
+      isCorrectChain,
       allowanceResult.data,
       isApprovePending,
       isDepositPending,
@@ -112,7 +120,6 @@ export function useDeposit(poolAddress: Address) {
     ],
   );
 
-  // Chain: approval confirmed → deposit
   useEffect(() => {
     if (approveSuccess && pendingAmount.current && status === "approving") {
       setStatus("depositing");
@@ -125,28 +132,12 @@ export function useDeposit(poolAddress: Address) {
     }
   }, [approveSuccess, status, writeDeposit, poolAddress]);
 
-  // Status tracking
   useEffect(() => {
     if (depositSuccess) setStatus("success");
     else if (approveReceiptError || depositError || approveError)
       setStatus("error");
   }, [depositSuccess, approveReceiptError, depositError, approveError]);
 
-  useEffect(() => {
-    if (approveError) {
-      console.error("Approve Error:", approveError);
-    }
-
-    if (depositError) {
-      console.error("Deposit Error:", depositError);
-    }
-
-    if (approveReceiptError) {
-      console.error("Approve Receipt Error:", approveReceiptError);
-    }
-  }, [approveError, depositError, approveReceiptError]);
-
-  // Reset for next use
   const reset = useCallback(() => {
     pendingAmount.current = null;
     setStatus("idle");

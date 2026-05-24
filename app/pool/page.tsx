@@ -5,6 +5,7 @@ import { CountdownTimer } from "@/components/pool/CountdonTimer";
 import { useTheme } from "@/components/ThemeProvider";
 import { themeColors } from "@/constants";
 import { ParticipantsTable } from "@/components/pool/ParticipantsTable";
+import { WrongNetworkOverlay } from "@/components/WrongNetworkOverlay";
 import { useEffect, useState } from "react";
 
 export default function PoolPage() {
@@ -27,59 +28,58 @@ export default function PoolPage() {
   }, []);
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        backgroundColor: colors.background,
-        padding: isMobile
-          ? "90px 16px 32px"
-          : "110px 40px 40px",
-        overflowX: "hidden",
-      }}
-    >
-      <div
+    <>
+      {/* Blocks the pool UI when on wrong network */}
+      <WrongNetworkOverlay />
+
+      <main
         style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: isMobile
-            ? "1fr"
-            : "1fr 1fr",
-          gap: isMobile ? "48px" : "32px",
-          alignItems: "start",
+          minHeight: "100vh",
+          backgroundColor: colors.background,
+          padding: isMobile ? "90px 16px 32px" : "110px 40px 40px",
+          overflowX: "hidden",
         }}
       >
-        {/* LEFT */}
-        <section
+        <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            maxWidth: "1400px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? "48px" : "32px",
+            alignItems: "start",
           }}
         >
-          <h1
+          {/* LEFT */}
+          <section
             style={{
-              fontSize: isMobile
-                ? "1.7rem"
-                : "2rem",
-              fontWeight: 800,
-              marginBottom: "24px",
-              color: colors.textPrimary,
-              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            Pool Statistics
-          </h1>
+            <h1
+              style={{
+                fontSize: isMobile ? "1.7rem" : "2rem",
+                fontWeight: 800,
+                marginBottom: "24px",
+                color: colors.textPrimary,
+                textAlign: "center",
+              }}
+            >
+              Pool Statistics
+            </h1>
 
-          <PoolStats />
-        </section>
+            <PoolStats />
+          </section>
 
-        <section>
-          <CountdownTimer />
-        </section>
-      </div>
+          <section>
+            <CountdownTimer />
+          </section>
+        </div>
 
-      <ParticipantsTable />
-    </main>
+        <ParticipantsTable />
+      </main>
+    </>
   );
 }
