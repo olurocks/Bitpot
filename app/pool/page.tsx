@@ -7,25 +7,12 @@ import { themeColors } from "@/constants";
 import { ParticipantsTable } from "@/components/pool/ParticipantsTable";
 import { WrongNetworkOverlay } from "@/components/WrongNetworkOverlay";
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function PoolPage() {
   const { theme } = useTheme();
   const colors = themeColors[theme];
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   return (
     <>
