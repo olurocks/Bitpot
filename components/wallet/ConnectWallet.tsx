@@ -1,100 +1,249 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { WalletModal } from "./WalletModal";
+// import { useIsCorrectNetwork } from "./NetworkGuard";
+import { createPortal } from "react-dom";
 
-function shorten(address: string) {
+function shorten(address?: string) {
+  if (!address || address.length < 10) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 export function ConnectWallet() {
-  const { address, status, chain } = useAccount();
-  const { connect, connectors, isPending } = useConnect();
+  const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  // const isCorrectNetwork = useIsCorrectNetwork();
   const router = useRouter();
 
-  const connector = connectors[0];
+  const [mounted, setMounted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const isConnected = status === "connected";
+  const [menuPosition, setMenuPosition] = useState({
+    top: 0,
+    left: 0,
+  });
 
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // mount state (for wagmi hydration)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // close when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      const insideButton =
+        wrapperRef.current?.contains(target);
+
+      const insideDropdown =
+        dropdownRef.current?.contains(target);
+
+      if (!insideButton && !insideDropdown) {
         setMenuOpen(false);
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
     };
   }, []);
 
-  if (isConnected && address) {
-    return (
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-          style={{ cursor: "pointer" }}
-        >
-          {shorten(address)}
-        </button>
-        {menuOpen && (
-<div className="absolute right-0 mt-2 w-56 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5" style={{ zIndex: 200 }}>            <div className="px-4 py-3 border-b border-gray-100">
-              <p className="text-sm font-medium text-gray-900">
-                Connected Wallet
-              </p>
-              <p className="text-xs text-gray-500 truncate">{address}</p>
-              {chain && (
-                <p className="text-xs text-emerald-600 mt-1 capitalize">
-                  {chain.name}
-                </p>
-              )}
-            </div>
+  // close on escape
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
 
-            <div className="py-1">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  router.push("/profile");
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                style={{ cursor: "pointer" }}
-              >
-                View Profile
-              </button>
-            </div>
-
-            <div className="py-1 border-t border-gray-100">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  disconnect();
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                style={{ cursor: "pointer" }}
-              >
-                Disconnect
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
     );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+    };
+  }, []);
+
+  function toggleMenu() {
+    if (buttonRef.current) {
+      const rect =
+        buttonRef.current.getBoundingClientRect();
+
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.right - 224,
+      });
+    }
+
+    setMenuOpen(prev => !prev);
   }
 
+  // prevent hydration mismatch
+  const showConnected =
+    mounted &&
+    isConnected &&
+    address;
+
   return (
-    <button
-      onClick={() => connect({ connector })}
-      disabled={!connector || isPending}
-      className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
-      style={{ cursor: "pointer" }}
-    >
-      {isPending ? "Connecting..." : "Connect Wallet"}
-    </button>
+    <>
+      {showConnected ? (
+        <div
+          ref={wrapperRef}
+          className="relative"
+        >
+          <button
+            ref={buttonRef}
+            onClick={toggleMenu}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className={`
+              flex items-center gap-2
+              rounded-full
+              px-4 py-2
+              text-sm
+              font-semibold
+              cursor-pointer
+              transition
+            `}
+          >
+            {/* {!isCorrectNetwork && (
+              <span>⚠️</span>
+            )} */}
+
+            {shorten(address)}
+          </button>
+
+          {mounted &&
+            menuOpen &&
+            createPortal(
+              <div
+                ref={dropdownRef}
+                role="menu"
+                style={{
+                  position: "fixed",
+                  top: menuPosition.top,
+                  left: menuPosition.left,
+                  width: "224px",
+                  zIndex: 9999,
+                }}
+                className="
+                  overflow-hidden
+                  rounded-lg
+                  border
+                  border-gray-200
+                  bg-white
+                  shadow-lg
+                "
+              >
+                <div className="px-4 py-3 border-b">
+                  <p className="text-sm font-medium">
+                    Connected Wallet
+                  </p>
+
+                  <p className="truncate text-xs text-gray-500">
+                    {address}
+                  </p>
+
+                  {/* {!isCorrectNetwork && (
+                    <p className="mt-1 text-xs font-semibold text-red-500">
+                      Wrong network
+                    </p>
+                  )} */}
+                </div>
+
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    router.push("/profile");
+                  }}
+                  className="
+                    w-full
+                    px-4
+                    py-2
+                    text-left
+                    text-sm
+                    hover:bg-gray-50
+                  "
+                >
+                  View Profile
+                </button>
+
+                <div className="border-t" />
+
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    disconnect();
+                    setMenuOpen(false);
+                  }}
+                  className="
+                    w-full
+                    px-4
+                    py-2
+                    text-left
+                    text-sm
+                    text-red-600
+                    hover:bg-red-50
+                  "
+                >
+                  Disconnect
+                </button>
+              </div>,
+              document.body
+            )}
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={() =>
+              setModalOpen(true)
+            }
+            className="
+              rounded-full
+              bg-emerald-500
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-white
+              hover:bg-emerald-600
+            "
+          >
+            Connect Wallet
+          </button>
+
+          {modalOpen && (
+            <WalletModal
+              onClose={() =>
+                setModalOpen(false)
+              }
+            />
+          )}
+        </>
+      )}
+    </>
   );
 }
